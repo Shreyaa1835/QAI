@@ -1,0 +1,890 @@
+# Practical: 5-Qubit Quantum Fourier Transform (QFT) Using Qiskit
+
+## 1. AIM
+
+To implement and simulate the **5-Qubit Quantum Fourier Transform (QFT)** using Qiskit. The experiment applies Hadamard gates, controlled phase gates and SWAP gates to transform a quantum state into its frequency-domain representation and observes the measurement results using a quantum simulator.
+
+## 2. CONCEPTS USED IN THIS PRACTICAL
+
+### 2.1 Quantum Fourier Transform (QFT)
+
+Quantum Fourier Transform is a quantum algorithm that transforms a quantum state from the computational basis into the Fourier basis.
+
+It is the quantum equivalent of the classical Discrete Fourier Transform (DFT).
+
+It is used in:
+- Shor's factoring algorithm.
+- Quantum phase estimation.
+- Period finding.
+- Quantum signal processing.
+
+**Main idea:** QFT transforms the amplitudes and phases of a quantum state. It helps identify periodic patterns in quantum information.
+
+### 2.2 Hadamard Gate (H)
+
+The Hadamard gate creates superposition.
+
+For example:
+
+\[
+H|0\rangle=\frac{|0\rangle+|1\rangle}{\sqrt{2}}
+\]
+
+It is used to create combinations of quantum states before applying controlled phase rotations.
+
+### 2.3 Controlled Phase Gate (CP)
+
+The controlled phase gate applies a phase rotation to a quantum state depending on the values of two qubits.
+
+It is represented by:
+
+\[
+CP(\theta)
+\]
+
+Where \(\theta\) is the phase rotation angle.
+
+### 2.4 SWAP Gate
+
+The SWAP gate exchanges the states of two qubits.
+
+For example:
+
+\[
+|01\rangle \rightarrow |10\rangle
+\]
+
+It is used in QFT to reverse the order of the qubits at the end.
+
+### 2.5 Measurement
+
+Measurement converts the quantum state into classical information, producing 0 or 1 for each measured qubit.
+
+### 2.6 Gates Used in This Practical
+
+| Gate | Purpose |
+|---|---|
+| H | Creates superposition. |
+| CP | Applies a controlled phase rotation. |
+| SWAP | Exchanges the states of two qubits. |
+| Measure | Converts quantum information into classical bits. |
+
+---
+
+## 3. LINE-BY-LINE CODE EXPLANATION
+
+### A. Importing Libraries
+
+**Line 1: `from qiskit import QuantumCircuit, transpile`**
+
+- Imports two components from Qiskit.
+- `QuantumCircuit` is used to create a quantum circuit and apply quantum gates.
+- `transpile` converts the circuit into instructions supported by the selected simulator or quantum hardware.
+
+**Possible questions:**
+
+- **Q: What is Qiskit?**  
+  A: Qiskit is an open-source Python framework for quantum computing.
+- **Q: What is transpilation?**  
+  A: It converts a quantum circuit into instructions supported by a particular backend.
+
+**Line 2: `from qiskit_aer import AerSimulator`**
+
+- Imports AerSimulator from Qiskit Aer.
+- It is used to simulate quantum circuits on a classical computer.
+- It allows us to execute quantum circuits without requiring an actual quantum computer.
+
+**Possible question:**
+
+- **Q: What is AerSimulator?**  
+  A: It is a simulator used to execute quantum circuits on a classical computer.
+
+### B. Creating the Quantum Circuit
+
+**Line 3: `qc = QuantumCircuit(5, 5)`**
+
+- Creates a quantum circuit containing 5 qubits and 5 classical bits.
+- Quantum bits are q0, q1, q2, q3 and q4.
+- Classical bits are c0, c1, c2, c3 and c4.
+- The five qubits are used to perform the Quantum Fourier Transform.
+- The classical bits store the measurement results.
+
+**Possible questions:**
+
+- **Q: How many qubits are used in this practical?**  
+  A: Five qubits.
+- **Q: Why are five classical bits required?**  
+  A: To store the measurement result of each of the five qubits.
+- **Q: What is the maximum number of possible measurement outcomes?**  
+  A: \(2^5=32\).
+
+### C. Applying Hadamard and Controlled Phase Gates
+
+**Line 4: `for i in range(5):`**
+
+- Starts a loop that runs five times.
+- The variable `i` takes values from 0 to 4.
+- Each iteration processes one qubit.
+
+**Possible question:**
+
+- **Q: Why is range(5) used?**  
+  A: Because the circuit contains five qubits.
+
+**Line 5: `qc.h(i)`**
+
+- Applies a Hadamard gate to the qubit specified by `i`.
+- It creates superposition in that qubit.
+- For example:
+
+\[
+|0\rangle \rightarrow \frac{|0\rangle+|1\rangle}{\sqrt{2}}
+\]
+
+- Since the loop runs five times, a Hadamard gate is applied to every qubit.
+
+**Possible questions:**
+
+- **Q: Why is the Hadamard gate used in QFT?**  
+  A: To create superposition and form the basis for the Fourier transformation.
+- **Q: How many Hadamard gates are applied?**  
+  A: Five.
+- **Q: What happens when H is applied to \(|0\rangle\)?**  
+  A: It creates an equal superposition of \(|0\rangle\) and \(|1\rangle\).
+
+**Line 6: `for j in range(i + 1, 5):`**
+
+- Starts an inner loop.
+- It selects qubits after the current qubit `i`.
+- The loop runs from `i + 1` up to 4.
+- It is used to apply controlled phase gates between different pairs of qubits.
+
+**Example:**
+
+When `i = 0`, the values of `j` are 1, 2, 3 and 4.
+
+When `i = 1`, the values of `j` are 2, 3 and 4.
+
+**Possible questions:**
+
+- **Q: Why is an inner loop used?**  
+  A: To apply controlled phase gates between different pairs of qubits.
+- **Q: What does `i + 1` mean?**  
+  A: It starts the inner loop from the next qubit after the current qubit.
+
+**Line 7: `qc.cp(3.141592653589793 / (2 ** (j - i)), j, i)`**
+
+This is one of the most important lines in the practical.
+
+It applies a **Controlled Phase (CP) gate** between two qubits.
+
+Let's understand its components:
+
+**1. `qc.cp()`**
+
+- Applies a controlled phase gate.
+- It introduces a phase rotation depending on the states of the two qubits.
+
+**2. `3.141592653589793`**
+
+- Represents the mathematical constant \(\pi\).
+- Its approximate value is 3.14159.
+
+**3. `2 ** (j - i)`**
+
+- Calculates 2 raised to the power of the difference between `j` and `i`.
+- It determines the denominator used to calculate the rotation angle.
+
+**4. `3.141592653589793 / (2 ** (j - i))`**
+
+Calculates the controlled phase angle:
+
+\[
+\theta=\frac{\pi}{2^{j-i}}
+\]
+
+For example:
+
+| Difference (j-i) | Rotation angle |
+|---|---|
+| 1 | \(\pi/2\) |
+| 2 | \(\pi/4\) |
+| 3 | \(\pi/8\) |
+| 4 | \(\pi/16\) |
+
+**5. `j, i`**
+
+- `j` specifies the first qubit argument.
+- `i` specifies the second qubit argument.
+- These are the two qubits involved in the controlled phase operation.
+
+The controlled phase gate is symmetric in its two qubit operands: it applies a phase only when both qubits are 1.
+
+**Possible questions:**
+
+- **Q: What is a CP gate?**  
+  A: It is a controlled phase gate that applies a phase rotation when both qubits are in state 1.
+- **Q: Why are different rotation angles used?**  
+  A: To introduce the phase relationships required by the Quantum Fourier Transform.
+- **Q: What is the formula for the angle?**  
+  A: \(\theta=\pi/2^{j-i}\).
+- **Q: What does pi represent?**  
+  A: It is a mathematical constant approximately equal to 3.14159.
+- **Q: What is the difference between CX and CP?**  
+  A: CX flips the target qubit under a control condition, whereas CP applies a conditional phase rotation.
+
+### D. Reversing the Qubit Order
+
+**Line 8: `for i in range(5 // 2):`**
+
+- Starts a loop for reversing the qubit order.
+- `//` represents integer division.
+- `5 // 2` gives 2.
+- Therefore, the loop runs for `i = 0` and `i = 1`.
+
+**Possible questions:**
+
+- **Q: What is integer division?**  
+  A: It divides two numbers and returns the integer part of the result.
+- **Q: What is the value of 5 // 2?**  
+  A: 2.
+
+**Line 9: `qc.swap(i, 4 - i)`**
+
+- Applies a SWAP gate between two qubits.
+- It exchanges the states of the selected qubits.
+- When `i = 0`, it swaps q0 and q4.
+- When `i = 1`, it swaps q1 and q3.
+- q2 remains unchanged.
+
+**Possible questions:**
+
+- **Q: What is a SWAP gate?**  
+  A: It exchanges the states of two qubits.
+- **Q: Why are SWAP gates used in QFT?**  
+  A: To reverse the order of qubits at the end of the standard QFT circuit.
+- **Q: Which qubits are swapped here?**  
+  A: q0 with q4 and q1 with q3.
+- **Q: Why is q2 not swapped?**  
+  A: It is the middle qubit and remains in the same position when the order is reversed.
+
+### E. Measuring the Qubits
+
+**Line 10: `qc.measure(range(5), range(5))`**
+
+- Measures all five quantum bits.
+- `range(5)` selects q0 to q4.
+- The second `range(5)` selects c0 to c4.
+- Each qubit's measurement result is stored in its corresponding classical bit.
+
+**Mapping:**
+
+| Quantum bit | Classical bit |
+|---|---|
+| q0 | c0 |
+| q1 | c1 |
+| q2 | c2 |
+| q3 | c3 |
+| q4 | c4 |
+
+**Possible questions:**
+
+- **Q: What does measure() do?**  
+  A: It measures a qubit and stores its result in a classical bit.
+- **Q: How many qubits are measured?**  
+  A: Five.
+- **Q: What is the maximum number of measurement outcomes?**  
+  A: 32.
+
+### F. Displaying the Circuit
+
+**Line 11: `print("5-Qubit Quantum Fourier Transform")`**
+
+Displays the title of the practical.
+
+**Line 12: `print("\nQuantum Circuit:")`**
+
+Displays the heading for the circuit diagram. `\n` inserts a new line.
+
+**Line 13: `print(qc.draw())`**
+
+- Displays the complete quantum circuit.
+- Shows Hadamard gates, controlled phase gates, SWAP gates and measurement operations.
+
+**Possible question:**
+
+- **Q: What does qc.draw() do?**  
+  A: It displays the visual representation of the quantum circuit.
+
+### G. Executing the Circuit
+
+**Line 14: `simulator = AerSimulator()`**
+
+- Creates an AerSimulator object.
+- It is used to execute the quantum circuit on a classical computer.
+
+**Line 15: `compiled_circuit = transpile(qc, simulator)`**
+
+- Converts the circuit into instructions supported by AerSimulator.
+- Prepares the circuit for execution.
+
+**Line 16: `job = simulator.run(compiled_circuit, shots=1024)`**
+
+- Executes the compiled circuit.
+- `shots=1024` means the circuit is executed 1024 times.
+- Each execution is called a shot.
+
+**Possible questions:**
+
+- **Q: What is a shot?**  
+  A: One execution of a quantum circuit.
+- **Q: Why are 1024 shots used?**  
+  A: To collect measurement samples and observe the probability distribution.
+- **Q: Does 1024 represent the number of qubits?**  
+  A: No. It represents the number of circuit executions.
+
+**Line 17: `result = job.result()`**
+
+Retrieves the execution results after the simulator completes the job.
+
+**Line 18: `counts = result.get_counts()`**
+
+- Extracts the measurement results.
+- Returns a dictionary containing measured bitstrings and their frequencies.
+
+### H. Displaying the Measurement Results
+
+**Line 19: `print("\nQFT Measurement Results:")`**
+
+Displays the heading for the measurement results.
+
+**Line 20: `for state, frequency in sorted(counts.items()):`**
+
+- `counts.items()` returns the bitstrings and their frequencies.
+- `sorted()` arranges the results in ascending order.
+- `state` stores a measured bitstring.
+- `frequency` stores how many times that bitstring occurred.
+
+**Line 21: `print(state, ":", frequency)`**
+
+Displays each measurement outcome and its frequency.
+
+**Line 22: `print("\nTotal Measurements:", sum(counts.values()))`**
+
+- Adds all the measurement frequencies.
+- Displays the total number of measurements.
+- It should display 1024 because the circuit was executed for 1024 shots.
+
+**Line 23: `print("Unique Measurement Results:", len(counts))`**
+
+- Counts the number of distinct measurement outcomes.
+- `len(counts)` returns the number of unique bitstrings observed.
+
+**Possible questions:**
+
+- **Q: What does get_counts() return?**  
+  A: A dictionary containing measurement outcomes and their frequencies.
+- **Q: What does sum(counts.values()) calculate?**  
+  A: The total number of measurements.
+- **Q: What does len(counts) represent?**  
+  A: The number of distinct measurement outcomes.
+
+---
+
+## 4. COMPLETE OUTPUT EXPLANATION
+
+The program produces three main outputs.
+
+### A. Quantum Circuit Diagram
+
+The circuit diagram displays:
+
+- Five quantum wires: q0, q1, q2, q3 and q4.
+- Five Hadamard gates.
+- Controlled phase gates between pairs of qubits.
+- Two SWAP gates to reverse the qubit order.
+- Measurement operations on all five qubits.
+
+### B. QFT Measurement Results
+
+The output will look similar to this (frequencies are illustrative):
+
+```text
+QFT Measurement Results:
+
+00000 : 34
+00001 : 29
+00010 : 31
+00011 : 32
+00100 : 35
+00101 : 28
+00110 : 33
+00111 : 30
+01000 : 31
+01001 : 34
+01010 : 29
+01011 : 32
+01100 : 30
+01101 : 33
+01110 : 31
+01111 : 32
+10000 : 30
+10001 : 34
+10010 : 31
+10011 : 29
+10100 : 32
+10101 : 33
+10110 : 30
+10111 : 31
+11000 : 34
+11001 : 29
+11010 : 32
+11011 : 30
+11100 : 31
+11101 : 33
+11110 : 29
+11111 : 31
+
+Total Measurements: 1024
+Unique Measurement Results: 32
+```
+
+**Note:** These frequencies are only an example. Your actual output will have slightly different frequencies because of probabilistic measurement sampling.
+
+### Understanding the Measurement Results
+
+There are five qubits, so the maximum possible number of measurement outcomes is:
+
+\[
+2^5=32
+\]
+
+The possible outcomes range from:
+
+`00000` to `11111`.
+
+**Why do we get 32 different outcomes?**
+
+Initially, all five qubits are in the state:
+
+\[
+|00000\rangle
+\]
+
+The Hadamard gates create an equal superposition of all 32 computational basis states.
+
+Mathematically:
+
+\[
+|00000\rangle \rightarrow
+\frac{1}{\sqrt{32}}\sum_{x=0}^{31}|x\rangle
+\]
+
+The controlled phase gates do not change this particular state because the qubits are initially in \(|0\rangle\) when they act as controls. The final SWAP gates also do not change the uniform superposition.
+
+Therefore, each of the 32 measurement outcomes has an equal probability:
+
+\[
+P(\text{each outcome})=\frac{1}{32}
+\]
+
+\[
+P=\frac{1}{32}=0.03125=3.125\%
+\]
+
+### Expected Frequency
+
+Since the circuit runs for 1024 shots:
+
+\[
+\text{Expected frequency}=\frac{1024}{32}=32
+\]
+
+Therefore, each outcome is expected to appear approximately 32 times.
+
+The actual frequency may be slightly higher or lower.
+
+### Understanding the Final Statements
+
+**Total Measurements: 1024**
+
+Confirms that the circuit was executed 1024 times.
+
+**Unique Measurement Results: 32**
+
+Confirms that all 32 possible five-bit measurement outcomes were observed, if the actual output contains all of them.
+
+---
+
+## 5. COMPLETE AIM-BASED THEORY
+
+### 5.1 What is Quantum Fourier Transform?
+
+Quantum Fourier Transform is a quantum operation that transforms a quantum state from the computational basis into the Fourier basis.
+
+It is the quantum equivalent of the classical Discrete Fourier Transform.
+
+It is useful for identifying periodic patterns and phase information in quantum states.
+
+### 5.2 Mathematical Representation of QFT
+
+For an n-qubit system:
+
+\[
+N=2^n
+\]
+
+The Quantum Fourier Transform is defined as:
+
+\[
+QFT|x\rangle=
+\frac{1}{\sqrt{N}}
+\sum_{y=0}^{N-1}
+e^{2\pi ixy/N}|y\rangle
+\]
+
+Where:
+
+- \(x\) = Input state.
+- \(y\) = Output state.
+- \(N\) = Total number of possible states.
+- \(i\) = Imaginary unit.
+
+For this practical:
+
+\[
+n=5
+\]
+
+\[
+N=2^5=32
+\]
+
+Therefore, the circuit operates on a 32-dimensional quantum state space.
+
+### 5.3 Working of Quantum Fourier Transform
+
+The QFT circuit works in the following stages:
+
+**Step 1: Initialize the qubits**
+
+Five qubits are initialized to:
+
+\[
+|00000\rangle
+\]
+
+**Step 2: Apply Hadamard gates**
+
+Hadamard gates are applied to all five qubits.
+
+They create superposition and allow the circuit to represent multiple computational basis states.
+
+**Step 3: Apply controlled phase gates**
+
+Controlled phase gates introduce phase rotations between pairs of qubits.
+
+The rotation angle depends on the distance between the qubit indices:
+
+\[
+\theta=\frac{\pi}{2^{j-i}}
+\]
+
+These phase rotations are essential for encoding the Fourier phase relationships.
+
+**Step 4: Apply SWAP gates**
+
+The SWAP gates reverse the order of the qubits.
+
+This is required in the standard QFT circuit decomposition.
+
+**Step 5: Measure the qubits**
+
+All five qubits are measured to obtain classical output bitstrings.
+
+### 5.4 Why Are Hadamard Gates Used?
+
+Hadamard gates create superposition.
+
+They transform:
+
+\[
+|0\rangle\rightarrow
+\frac{|0\rangle+|1\rangle}{\sqrt{2}}
+\]
+
+In QFT, they help construct the Fourier-transformed state.
+
+### 5.5 Why Are Controlled Phase Gates Used?
+
+Controlled phase gates introduce phase relationships between qubits.
+
+These phase relationships are necessary for performing the Fourier transformation.
+
+Unlike the X gate, a controlled phase gate does not flip the computational state. It changes the phase when both qubits are in state 1.
+
+### 5.6 Why Are SWAP Gates Required?
+
+In the standard QFT circuit, the output qubits are naturally produced in reversed order.
+
+SWAP gates correct this ordering.
+
+For five qubits, two SWAP gates are required:
+
+- q0 ↔ q4
+- q1 ↔ q3
+
+The middle qubit q2 remains unchanged.
+
+### 5.7 Applications of QFT
+
+Quantum Fourier Transform is used in:
+
+1. **Shor's Algorithm:** Used for integer factorization.
+2. **Quantum Phase Estimation:** Used to estimate eigenvalues and phases.
+3. **Period Finding:** Helps identify periodic patterns in functions.
+4. **Quantum Algorithms:** Acts as an important component in several quantum algorithms.
+5. **Quantum Signal Processing:** Helps process information represented through quantum states.
+
+### 5.8 Difference Between DFT and QFT
+
+| DFT | QFT |
+|---|---|
+| Discrete Fourier Transform. | Quantum Fourier Transform. |
+| Classical algorithm. | Quantum algorithm. |
+| Operates on classical data. | Operates on quantum states. |
+| Uses classical mathematical operations. | Uses quantum gates. |
+| Produces classical frequency-domain values. | Produces a quantum state with Fourier-transformed amplitudes and phases. |
+
+---
+
+## 6. IMPORTANT VIVA QUESTIONS WITH ANSWERS
+
+### A. Basic Questions
+
+**Q1. What is the aim of this practical?**  
+To implement and simulate a five-qubit Quantum Fourier Transform using Qiskit.
+
+**Q2. What is QFT?**  
+QFT is a quantum operation that transforms a quantum state from the computational basis into the Fourier basis.
+
+**Q3. What is the full form of QFT?**  
+Quantum Fourier Transform.
+
+**Q4. What is the classical equivalent of QFT?**  
+Discrete Fourier Transform (DFT).
+
+**Q5. How many qubits are used in this practical?**  
+Five qubits.
+
+**Q6. How many possible states can five qubits represent?**
+
+\[
+2^5=32
+\]
+
+Therefore, 32 possible computational basis states exist.
+
+### B. Quantum Gate Questions
+
+**Q7. What is a Hadamard gate?**  
+It is a quantum gate that creates superposition.
+
+**Q8. Why is the Hadamard gate used in QFT?**  
+To create superposition and construct the Fourier-transformed state.
+
+**Q9. What is a controlled phase gate?**  
+It is a two-qubit gate that applies a phase rotation when both qubits are in state 1.
+
+**Q10. What is the formula for the controlled phase angle in this program?**
+
+\[
+\theta=\frac{\pi}{2^{j-i}}
+\]
+
+**Q11. What is the difference between CX and CP gates?**  
+CX flips the target qubit when the control is 1, whereas CP applies a conditional phase rotation.
+
+**Q12. What is a SWAP gate?**  
+It is a gate that exchanges the states of two qubits.
+
+**Q13. Why are SWAP gates used in QFT?**  
+To reverse the qubit order at the end of the standard QFT circuit.
+
+**Q14. How many SWAP gates are used in this practical?**  
+Two.
+
+**Q15. Which qubits are swapped?**  
+q0 with q4 and q1 with q3.
+
+### C. Conceptual Questions
+
+**Q16. What is superposition?**  
+It is the ability of a qubit to exist in a combination of quantum states.
+
+**Q17. What is the computational basis?**  
+It is the standard basis consisting of states such as \(|0\rangle\) and \(|1\rangle\) for one qubit.
+
+**Q18. What is the Fourier basis?**  
+It is the basis formed by the Fourier-transformed quantum states.
+
+**Q19. What is the role of phase in QFT?**  
+Phase determines the relationships between the amplitudes of quantum states and is essential to the Fourier transformation.
+
+**Q20. What is the value of N for five qubits?**  
+N = 32.
+
+**Q21. What happens when a Hadamard gate is applied to \(|0\rangle\)?**  
+It creates an equal superposition of \(|0\rangle\) and \(|1\rangle\).
+
+**Q22. Why are different controlled phase angles used?**  
+To introduce the phase relationships required for QFT.
+
+**Q23. What is the output of QFT when the input is \(|00000\rangle\)?**  
+An equal superposition of all 32 computational basis states.
+
+### D. Output-Related Questions
+
+**Q24. Why are 32 possible measurement outcomes generated?**  
+Because five qubits can represent \(2^5=32\) computational basis states.
+
+**Q25. What is the expected probability of each output state for this input?**
+
+\[
+\frac{1}{32}=3.125\%
+\]
+
+**Q26. Why are approximately 32 counts expected for each state?**  
+Because 1024 shots are distributed equally among 32 possible outcomes.
+
+\[
+1024/32=32
+\]
+
+**Q27. What is a shot?**  
+One execution of a quantum circuit.
+
+**Q28. Why are 1024 shots used?**  
+To collect measurement samples and estimate the output probability distribution.
+
+**Q29. What does get_counts() return?**  
+It returns a dictionary containing measured bitstrings and their frequencies.
+
+**Q30. What does len(counts) represent?**  
+It represents the number of distinct measurement outcomes observed.
+
+### E. Qiskit-Related Questions
+
+**Q31. What is Qiskit?**  
+An open-source Python framework for quantum computing.
+
+**Q32. What is AerSimulator?**  
+A simulator used to execute quantum circuits on a classical computer.
+
+**Q33. What does transpile do?**  
+It converts a circuit into instructions supported by the selected backend.
+
+**Q34. What does qc.draw() do?**  
+It displays the quantum circuit diagram.
+
+**Q35. What does qc.measure(range(5), range(5)) do?**  
+It measures all five qubits and stores their results in the corresponding classical bits.
+
+### F. Tricky External Questions
+
+**Q36. Is QFT the same as classical Fourier Transform?**  
+No. QFT operates on quantum states, while classical Fourier Transform operates on classical data.
+
+**Q37. Does QFT increase the number of qubits?**  
+No. It transforms the state of the existing qubits.
+
+**Q38. Does QFT create entanglement?**  
+It can create entanglement depending on the input state, but it does not necessarily do so for every input.
+
+**Q39. Can QFT be applied to any number of qubits?**  
+Yes. It can be constructed for different numbers of qubits.
+
+**Q40. Why is QFT important in Shor's algorithm?**  
+It helps extract periodicity information, which is essential for the factoring process.
+
+**Q41. What happens if SWAP gates are removed?**  
+The output qubits remain in reversed order compared with the standard QFT convention.
+
+**Q42. Does measurement preserve the quantum state?**  
+Generally, measurement changes or collapses the state into the measured outcome in the chosen basis.
+
+**Q43. Does this practical use a real quantum computer?**  
+No. It uses AerSimulator, which simulates quantum computation on a classical computer.
+
+---
+
+## 7. IMPORTANT TECHNICAL OBSERVATIONS ABOUT YOUR CODE
+
+These are particularly useful for answering follow-up questions from the external examiner.
+
+### 1. What is the initial input state?
+
+Your circuit does not apply any X gates or other state-preparation gates before the QFT operations.
+
+Therefore, the initial state is:
+
+\[
+|00000\rangle
+\]
+
+### 2. Why is the output approximately uniform?
+
+The QFT of the zero state is:
+
+\[
+QFT|0\rangle=
+\frac{1}{\sqrt{32}}
+\sum_{y=0}^{31}|y\rangle
+\]
+
+Therefore, all 32 outcomes have equal measurement probability.
+
+### 3. Do the controlled phase gates change the output in this particular experiment?
+
+For the given initial state, the controlled phase gates do not introduce phase changes.
+
+The reason is that each controlled phase gate uses qubits that have not yet received their Hadamard gates as its first qubit argument. Those qubits are still in \(|0\rangle\) for this input, so the controlled phase condition is not satisfied.
+
+**Important:** The controlled phase gates are still part of the QFT circuit and are essential when transforming general input states.
+
+### 4. Is the circuit a standard QFT implementation?
+
+The gate sequence follows a standard QFT-style decomposition:
+
+- Hadamard gates.
+- Controlled phase rotations.
+- Final qubit-order reversal using SWAP gates.
+
+However, because the input is \(|00000\rangle\), the output only demonstrates the uniform-superposition result. To demonstrate nontrivial Fourier phase relationships, you can test the circuit with a nonzero computational-basis input.
+
+---
+
+## 8. IMPORTANT POINTS TO REMEMBER FOR THE EXTERNAL
+
+| Topic | Answer |
+|---|---|
+| Practical | 5-Qubit Quantum Fourier Transform |
+| Full form | Quantum Fourier Transform |
+| Classical equivalent | Discrete Fourier Transform |
+| Number of qubits | 5 |
+| Number of classical bits | 5 |
+| Total possible states | 32 |
+| Initial state | \(|00000\rangle\) |
+| Hadamard gates | 5 |
+| Controlled phase gates | 10 |
+| SWAP gates | 2 |
+| Controlled phase angle | \(\pi/2^{j-i}\) |
+| Simulator | AerSimulator |
+| Number of shots | 1024 |
+| Expected probability per outcome | 3.125% |
+| Expected frequency per outcome | 32 |
+| Main applications | Shor's algorithm, phase estimation and period finding |
+
+### One-Minute Explanation for the External
+
+Quantum Fourier Transform is a quantum algorithm that transforms a quantum state from the computational basis into the Fourier basis. In this practical, we implement a five-qubit QFT using Qiskit. First, we create a quantum circuit with five qubits and five classical bits. We apply Hadamard gates to create superposition, followed by controlled phase gates to introduce phase rotations between qubits. Then, we apply SWAP gates to reverse the qubit order. Finally, we measure all five qubits and execute the circuit using AerSimulator for 1024 shots. Since the initial state is \(|00000\rangle\), the QFT produces an equal superposition of all 32 possible states. We analyse the measurement frequencies to understand the output probability distribution.

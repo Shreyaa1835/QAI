@@ -1,0 +1,868 @@
+# Practical: Randomized Benchmarking Using Qiskit
+
+## 1. AIM
+
+To implement the **Randomized Benchmarking (RB) Protocol** using Qiskit and simulate the effect of quantum gate noise on a quantum circuit. The experiment measures how accurately quantum gates perform by analysing the survival probability of quantum states for different random circuit lengths.
+
+## 2. CONCEPTS USED IN THIS PRACTICAL
+
+### 2.1 Randomized Benchmarking (RB)
+
+Randomized Benchmarking is a technique used to measure the average error rate of quantum gates.
+
+It works by:
+1. Generating random sequences of quantum gates.
+2. Applying the gates to a quantum state.
+3. Applying a final gate that ideally returns the qubit to its initial state.
+4. Measuring how often the initial state is recovered.
+5. Repeating the experiment for different sequence lengths.
+
+**Main idea:** If the quantum gates are accurate, the qubit should return to its initial state with high probability. As the number of gates increases, noise generally causes the survival probability to decrease.
+
+### 2.2 Noise in Quantum Computing
+
+Noise refers to unwanted changes in a quantum state during quantum computation.
+
+It can occur due to:
+- Imperfect quantum gates.
+- Environmental disturbances.
+- Hardware limitations.
+- Decoherence.
+
+### 2.3 Depolarizing Noise
+
+Depolarizing noise is a mathematical noise model that randomly changes a quantum state.
+
+It represents errors introduced during quantum gate operations.
+
+In this practical, depolarizing noise is applied to single-qubit and two-qubit gates.
+
+### 2.4 Quantum Gates Used
+
+| Gate / Concept | Purpose |
+|---|---|
+| X | Performs a bit flip. |
+| SX | Square-root-of-X gate; performs a half rotation around the X-axis. |
+| CX | Controlled-NOT gate. |
+| Depolarizing error | Simulates quantum gate noise. |
+| NoiseModel | Defines which noise affects which gates. |
+| AerSimulator | Simulates quantum circuit execution with noise. |
+| StandardRB | Generates and runs randomized benchmarking experiments. |
+
+**Important:** `StandardRB` must also be imported from Qiskit's Experiments package, normally using:
+
+`from qiskit_experiments.library import StandardRB`
+
+Your given code does not contain this import. If it has not already been imported in your notebook, you must add it before executing the practical.
+
+---
+
+## 3. LINE-BY-LINE CODE EXPLANATION
+
+### A. Importing Libraries
+
+**Line 1: `from qiskit_aer import AerSimulator`**
+
+- Imports AerSimulator from Qiskit Aer.
+- It is used to simulate quantum circuits on a classical computer.
+- It can also simulate quantum circuits with noise.
+
+**Possible questions:**
+
+- **Q: What is AerSimulator?**  
+  A: It is a quantum circuit simulator provided by Qiskit Aer.
+- **Q: Can it simulate noisy quantum circuits?**  
+  A: Yes. We can provide a noise model to simulate imperfect quantum gates.
+
+**Line 2: `from qiskit_aer.noise import NoiseModel, depolarizing_error`**
+
+Imports two components:
+
+- `NoiseModel`: Defines the noise that should be applied to quantum gates.
+- `depolarizing_error`: Creates a depolarizing noise channel with a specified error probability.
+
+**Possible questions:**
+
+- **Q: What is a NoiseModel?**  
+  A: It defines the types of errors that affect quantum gates in a simulation.
+- **Q: What is depolarizing_error?**  
+  A: It creates a noise channel that randomly introduces errors into a quantum state.
+
+**Important missing import:** Your code also uses `StandardRB`, so include this import before executing the program:
+
+`from qiskit_experiments.library import StandardRB`
+
+`StandardRB` is used to create the Standard Randomized Benchmarking experiment.
+
+### B. Defining Experimental Parameters
+
+**Line 3: `lengths = [1, 2, 4, 8, 16]`**
+
+- Creates a list of different randomized circuit sequence lengths.
+- The experiment tests sequences containing 1, 2, 4, 8 and 16 Clifford gates (sequence elements).
+- These lengths help us understand how errors accumulate as the sequence becomes longer.
+
+**Possible questions:**
+
+- **Q: What does lengths represent?**  
+  A: It represents the different sequence lengths used in randomized benchmarking.
+- **Q: Why are different lengths used?**  
+  A: To observe how the survival probability changes as the number of gates increases.
+
+**Line 4: `num_samples = 5`**
+
+- Specifies the number of random circuits generated for each sequence length.
+- Five random sequences are generated for every length.
+- This helps reduce the effect of randomness in individual circuits.
+
+**Possible question:**
+
+- **Q: What does num_samples mean?**  
+  A: It is the number of random benchmarking circuits generated for each sequence length.
+
+**Line 5: `shots = 200`**
+
+- Specifies the number of times each circuit is executed.
+- Each circuit is measured 200 times.
+- More shots generally provide better statistical estimates of measurement probabilities.
+
+**Possible questions:**
+
+- **Q: What are shots?**  
+  A: Shots are the number of times a quantum circuit is executed.
+- **Q: Why are 200 shots used?**  
+  A: To collect measurement data and estimate the survival probability.
+
+### C. Creating the Noise Model
+
+**Line 6: `noise_model = NoiseModel()`**
+
+- Creates an empty noise model.
+- Initially, no noise is assigned to any gate.
+- We add different noise channels in the next steps.
+
+**Possible question:**
+
+- **Q: Why do we create a noise model?**  
+  A: To simulate errors that can occur during quantum gate operations.
+
+**Lines 7–9: Single-Qubit Noise**
+
+The code adds depolarizing noise to the X and SX gates.
+
+**Line 7: `noise_model.add_all_qubit_quantum_error(`**
+
+- Adds a quantum error to the specified gates.
+- `add_all_qubit_quantum_error` means the error applies to all qubits on which the specified gate operates.
+
+**Line 8: `depolarizing_error(0.005, 1), ["x", "sx"]`**
+
+This line has two important parts:
+
+**Part 1: `depolarizing_error(0.005, 1)`**
+
+- `0.005` is the depolarizing error probability.
+- It represents a noise parameter of 0.5%.
+- `1` indicates that the noise channel acts on one qubit.
+
+**Part 2: `["x", "sx"]`**
+
+- Specifies the gates to which this error is applied.
+- The noise affects X and SX gates.
+
+**Line 9: `)`**
+
+Closes the function call.
+
+**Possible questions:**
+
+- **Q: What is single-qubit noise?**  
+  A: Noise affecting operations performed on one qubit.
+- **Q: What is the error probability here?**  
+  A: 0.005 or 0.5%.
+- **Q: Which gates receive single-qubit noise?**  
+  A: X and SX gates.
+- **Q: What does the number 1 represent?**  
+  A: The number of qubits affected by the noise channel.
+
+### D. Adding Two-Qubit Noise
+
+**Lines 10–12:**
+
+**Line 10: `noise_model.add_all_qubit_quantum_error(`**
+
+Adds another quantum error to the noise model.
+
+**Line 11: `depolarizing_error(0.05, 2), ["cx"]`**
+
+This line has two parts:
+
+**Part 1: `depolarizing_error(0.05, 2)`**
+
+- `0.05` represents a depolarizing error probability of 5%.
+- `2` indicates that the noise channel acts on two qubits.
+
+**Part 2: `["cx"]`**
+
+- Specifies that the noise is applied to CX gates.
+- CX is a two-qubit gate.
+
+**Line 12: `)`**
+
+Closes the function call.
+
+**Possible questions:**
+
+- **Q: What is two-qubit noise?**  
+  A: Noise that affects a two-qubit operation.
+- **Q: Which gate receives two-qubit noise?**  
+  A: The CX gate.
+- **Q: What is the error probability?**  
+  A: 0.05 or 5%.
+- **Q: Why is the CX error higher?**  
+  A: Two-qubit operations are often more difficult to implement accurately and can have higher error rates than single-qubit operations.
+
+### E. Creating the Simulator
+
+**Line 13: `backend = AerSimulator(noise_model=noise_model)`**
+
+- Creates an AerSimulator with the previously defined noise model.
+- `backend` represents the execution environment.
+- When supported noisy gates are executed, the simulator applies the specified noise.
+- This allows us to study the effect of gate errors on randomized benchmarking results.
+
+**Possible questions:**
+
+- **Q: What is a backend?**  
+  A: A backend is the system or simulator on which a quantum circuit is executed.
+- **Q: Why is noise_model passed to AerSimulator?**  
+  A: To make the simulator execute the circuit with the specified noise.
+
+### F. Creating the Randomized Benchmarking Experiment
+
+**Line 14: `rb_experiment = StandardRB(`**
+
+- Creates a Standard Randomized Benchmarking experiment.
+- `StandardRB` automatically generates random Clifford gate sequences and corresponding recovery operations.
+- It is used to estimate average gate errors.
+
+**Line 15: `physical_qubits=(0,),`**
+
+- Specifies the physical qubit on which the experiment is performed.
+- `(0,)` means only qubit 0 is selected.
+- The comma indicates that it is a single-element Python tuple.
+
+**Possible questions:**
+
+- **Q: What does physical_qubits mean?**  
+  A: It specifies which physical qubits are used in the experiment.
+- **Q: Why is (0,) written with a comma?**  
+  A: Because it represents a tuple containing one element.
+
+**Line 16: `lengths=lengths,`**
+
+- Passes the sequence lengths defined earlier.
+- The experiment uses lengths 1, 2, 4, 8 and 16.
+
+**Line 17: `num_samples=num_samples,`**
+
+- Specifies that five random circuits should be generated for each sequence length.
+
+**Line 18: `seed=1010`**
+
+- Sets the random seed.
+- It helps generate reproducible random sequences.
+- Using the same seed with the same software setup helps generate the same random sequence choices.
+
+**Possible questions:**
+
+- **Q: What is a random seed?**  
+  A: It is an initial value used by a random number generator.
+- **Q: Why is seed=1010 used?**  
+  A: To make the random sequence generation reproducible.
+- **Q: Does a seed remove quantum noise?**  
+  A: No. It controls random sequence generation, not the noise itself.
+
+**Line 19: `)`**
+
+Closes the StandardRB experiment creation.
+
+### G. Displaying Experimental Parameters
+
+**Line 20: `print("Randomized Benchmarking Protocol")`**
+
+Displays the title of the experiment.
+
+**Line 21: `print("Sequence lengths:", lengths)`**
+
+Displays the sequence lengths used:
+
+`[1, 2, 4, 8, 16]`
+
+**Line 22: `print("Samples per length:", num_samples)`**
+
+Displays the number of random circuits generated for each length:
+
+`5`
+
+**Line 23: `print("Shots per circuit:", shots)`**
+
+Displays the number of executions per circuit:
+
+`200`
+
+**Possible question:**
+
+- **Q: How many random circuits are generated in total?**  
+  A: There are five sequence lengths and five samples per length, so:
+
+\[
+5\times5=25
+\]
+
+Therefore, 25 random benchmarking circuits are generated.
+
+### H. Running the Experiment
+
+**Line 24: `experiment_data = rb_experiment.run(`**
+
+- Starts the randomized benchmarking experiment.
+- It generates and executes the required random circuits on the selected backend.
+
+**Line 25: `backend,`**
+
+Passes the noisy AerSimulator as the execution backend.
+
+**Line 26: `shots=shots`**
+
+Specifies 200 executions for each circuit.
+
+**Line 27: `).block_for_results()`**
+
+- `block_for_results()` waits until the experiment has finished.
+- It ensures that the results are available before the next statements execute.
+- The completed experimental data is stored in `experiment_data`.
+
+**Possible questions:**
+
+- **Q: What does run() do?**  
+  A: It executes the randomized benchmarking experiment.
+- **Q: What does block_for_results() do?**  
+  A: It waits until the experiment execution and result collection are complete.
+- **Q: What is experiment_data?**  
+  A: It stores the data collected from the randomized benchmarking experiment.
+
+### I. Extracting the Analysis Results
+
+**Line 28: `print("\nRandomized Benchmarking Results:")`**
+
+Displays the heading for the experiment results.
+
+**Line 29: `results = experiment_data.analysis_results(dataframe=True)`**
+
+- Extracts the analysis results from the experiment.
+- Performs the analysis of the measured data.
+- `dataframe=True` requests the results in Pandas DataFrame format.
+- The DataFrame makes the results easier to display and analyse.
+
+**Possible questions:**
+
+- **Q: What is a DataFrame?**  
+  A: It is a tabular data structure containing rows and columns, provided by Pandas.
+- **Q: Why is dataframe=True used?**  
+  A: To display the analysis results in a structured table.
+
+**Line 30: `print(results)`**
+
+Displays the randomized benchmarking analysis results.
+
+The table can contain estimated parameters such as:
+
+- **Alpha (α):** Describes how the survival probability changes with sequence length.
+- **EPC (Error Per Clifford):** Estimates the average error associated with a Clifford operation.
+
+The exact columns depend on the Qiskit Experiments version and the analysis configuration.
+
+### J. Displaying the Randomized Benchmarking Circuit
+
+**Line 31: `print("\nRandomized Benchmarking Circuit:")`**
+
+Displays the heading for the circuit diagram.
+
+**Line 32: `print(rb_experiment.circuits()[0].draw())`**
+
+- `rb_experiment.circuits()` retrieves the generated randomized benchmarking circuits.
+- `[0]` selects the first circuit from the list.
+- `.draw()` displays its circuit diagram.
+
+**Possible questions:**
+
+- **Q: What does circuits() return?**  
+  A: It returns the generated randomized benchmarking circuits.
+- **Q: What does [0] represent?**  
+  A: It selects the first circuit.
+- **Q: Why is draw() used?**  
+  A: To display the quantum circuit visually.
+
+---
+
+---
+
+## 4. COMPLETE OUTPUT EXPLANATION
+
+The program produces three main outputs.
+
+### A. Experimental Parameters
+
+The output begins with:
+
+```text
+Randomized Benchmarking Protocol
+Sequence lengths: [1, 2, 4, 8, 16]
+Samples per length: 5
+Shots per circuit: 200
+```
+
+**Explanation:**
+
+| Output | Meaning |
+|---|---|
+| Randomized Benchmarking Protocol | Name of the experiment. |
+| Sequence lengths | Different numbers of Clifford operations tested. |
+| Samples per length | Five random circuits for every sequence length. |
+| Shots per circuit | Each circuit is executed 200 times. |
+
+**Total number of circuits:**
+
+\[
+5\text{ lengths}\times5\text{ samples}=25
+\]
+
+**Total number of circuit executions:**
+
+\[
+25\times200=5000
+\]
+
+Therefore, the experiment performs 25 circuits and collects 5000 shots in total.
+
+### B. Randomized Benchmarking Results
+
+The program displays a results table using:
+
+`print(results)`
+
+The exact table depends on the Qiskit Experiments version and the analysis performed. It can contain estimated parameters such as:
+
+| Parameter | Meaning |
+|---|---|
+| `alpha` | Decay parameter describing how survival probability changes with sequence length. |
+| `EPC` | Error Per Clifford; estimates the average error associated with a Clifford operation. |
+| `value` | Estimated numerical value of a parameter. |
+| `stderr` | Estimated standard error or uncertainty of a parameter. |
+
+**What is survival probability?**
+
+Survival probability is the probability that the qubit is measured in its expected initial state after completing the randomized sequence and recovery operation.
+
+For example, if the initial state is \(|0\rangle\), successful recovery ideally returns the qubit to \(|0\rangle\).
+
+As sequence length increases, errors generally accumulate, causing survival probability to decrease.
+
+### Understanding Alpha (α)
+
+Alpha is the decay parameter obtained from the randomized benchmarking analysis.
+
+- Alpha close to 1 indicates lower average gate error.
+- Lower alpha generally indicates higher average gate error.
+
+For standard single-qubit randomized benchmarking, the relationship between EPC and alpha is:
+
+\[
+EPC=\frac{1-\alpha}{2}
+\]
+
+This formula assumes the standard single-qubit RB analysis model.
+
+### Understanding EPC
+
+EPC stands for **Error Per Clifford**.
+
+It estimates the average error associated with a Clifford operation.
+
+For example:
+- Lower EPC means better gate performance.
+- Higher EPC means more gate errors.
+
+**Important:** Do not assume a particular numerical EPC or alpha value without running the program. The values depend on the generated sequences, noise model and experiment analysis.
+
+### C. Randomized Benchmarking Circuit
+
+The last output displays the first generated randomized benchmarking circuit.
+
+It shows:
+- Random Clifford operations.
+- Quantum gates used in the sequence.
+- A recovery operation designed to return the qubit to its initial state.
+- Measurement at the end.
+
+**Why is a recovery operation required?**
+
+Randomized benchmarking uses a final recovery operation that ideally reverses the effect of the preceding Clifford sequence. This allows us to measure how much the quantum state has been affected by noise.
+
+---
+
+## 5. COMPLETE AIM-BASED THEORY
+
+### 5.1 What is Randomized Benchmarking?
+
+Randomized Benchmarking is a method used to estimate the average error rate of quantum gates.
+
+It helps evaluate the performance and reliability of quantum computers.
+
+Instead of testing only one gate, it applies randomly selected sequences of quantum operations and measures how well the original state is recovered.
+
+### 5.2 Working of Randomized Benchmarking
+
+The process works in the following steps:
+
+**Step 1: Generate random gate sequences**
+
+The experiment generates random Clifford gate sequences of different lengths.
+
+**Step 2: Apply the gate sequences**
+
+The generated quantum gates are applied to the qubit.
+
+**Step 3: Apply the recovery operation**
+
+A final recovery operation is applied so that the qubit ideally returns to its original state.
+
+**Step 4: Measure the qubit**
+
+The qubit is measured to determine whether the expected state was recovered.
+
+**Step 5: Repeat the experiment**
+
+The experiment is repeated using multiple random sequences and different sequence lengths.
+
+**Step 6: Analyse the results**
+
+The survival probabilities are analysed to estimate the average gate error.
+
+### 5.3 What are Clifford Gates?
+
+Clifford gates are a special group of quantum gates that transform Pauli operators into other Pauli operators under conjugation.
+
+Examples include:
+
+- Hadamard (H)
+- Pauli-X (X)
+- Pauli-Y (Y)
+- Pauli-Z (Z)
+- Phase gate (S)
+- CX gate
+
+They are widely used in quantum error correction and randomized benchmarking.
+
+### 5.4 What is Depolarizing Noise?
+
+Depolarizing noise is a noise model that represents errors introduced during quantum operations.
+
+For a single qubit, it can be represented as:
+
+\[
+\mathcal{E}(\rho)=(1-p)\rho+
+p\frac{I}{2}
+\]
+
+Where:
+
+- \(\rho\) = Original quantum state.
+- \(p\) = Depolarizing noise parameter.
+- \(I\) = Identity matrix.
+- \(I/2\) = Maximally mixed single-qubit state.
+
+As the noise parameter increases, the quantum state becomes more mixed.
+
+### 5.5 Difference Between Single-Qubit and Two-Qubit Noise
+
+| Single-Qubit Noise | Two-Qubit Noise |
+|---|---|
+| Affects one qubit. | Affects two qubits. |
+| Applied to single-qubit gates. | Applied to two-qubit gates. |
+| Example: X and SX gates. | Example: CX gate. |
+| In this program, parameter is 0.005. | In this program, parameter is 0.05. |
+
+### 5.6 What is Error Per Clifford (EPC)?
+
+EPC is the estimated average error associated with one Clifford operation.
+
+It is used to evaluate quantum gate performance.
+
+\[
+EPC=\frac{1-\alpha}{2}
+\]
+
+For single-qubit standard randomized benchmarking:
+
+- Low EPC indicates better gate performance.
+- High EPC indicates poorer gate performance.
+
+### 5.7 Why Are Different Sequence Lengths Used?
+
+Different sequence lengths help us understand how errors accumulate as more gates are applied.
+
+For example:
+
+| Sequence length | Meaning |
+|---|---|
+| 1 | Short sequence containing 1 Clifford operation. |
+| 2 | Sequence containing 2 Clifford operations. |
+| 4 | Sequence containing 4 Clifford operations. |
+| 8 | Sequence containing 8 Clifford operations. |
+| 16 | Sequence containing 16 Clifford operations. |
+
+Generally, longer sequences have more opportunities for errors to accumulate.
+
+### 5.8 Why Is Randomized Benchmarking Important?
+
+Randomized Benchmarking is useful because it:
+
+1. Measures average quantum gate errors.
+2. Evaluates quantum computer performance.
+3. Helps compare different quantum devices.
+4. Studies the effect of noise on quantum circuits.
+5. Helps identify whether quantum gates are sufficiently reliable.
+
+---
+
+## 6. IMPORTANT VIVA QUESTIONS WITH ANSWERS
+
+### A. Basic Questions
+
+**Q1. What is the aim of this practical?**  
+To implement randomized benchmarking using Qiskit and estimate the average error rate of quantum gates.
+
+**Q2. What is Randomized Benchmarking?**  
+It is a technique used to measure the average error rate of quantum gates by applying random sequences of operations and measuring the survival probability.
+
+**Q3. Why is Randomized Benchmarking required?**  
+To evaluate the accuracy, reliability and performance of quantum gates.
+
+**Q4. What is a quantum gate?**  
+A quantum gate is an operation that changes the state of one or more qubits.
+
+**Q5. What is a Clifford gate?**  
+A Clifford gate is a quantum operation that transforms Pauli operators into other Pauli operators under conjugation.
+
+**Q6. Give examples of Clifford gates.**  
+Hadamard, Pauli-X, Pauli-Y, Pauli-Z, S and CX gates.
+
+### B. Noise-Related Questions
+
+**Q7. What is quantum noise?**  
+Quantum noise refers to unwanted disturbances or errors that affect the quantum state during computation.
+
+**Q8. What is depolarizing noise?**  
+It is a noise model that randomly introduces errors into a quantum state, making it more mixed.
+
+**Q9. What is a NoiseModel?**  
+It defines the types of noise applied to quantum gates during simulation.
+
+**Q10. What is depolarizing_error()?**  
+It creates a depolarizing noise channel with a specified noise parameter and number of qubits.
+
+**Q11. What is the single-qubit error parameter in this practical?**  
+0.005, which is 0.5%.
+
+**Q12. What is the two-qubit error parameter?**  
+0.05, which is 5%.
+
+**Q13. Which gates receive single-qubit noise?**  
+X and SX gates.
+
+**Q14. Which gate receives two-qubit noise?**  
+CX gate.
+
+**Q15. Why is the two-qubit error parameter higher?**  
+Two-qubit operations are generally more difficult to implement accurately and often experience higher error rates.
+
+### C. Randomized Benchmarking Questions
+
+**Q16. What does sequence length mean?**  
+It represents the number of Clifford operations in a randomized sequence.
+
+**Q17. Why are different sequence lengths used?**  
+To observe how errors accumulate as the number of quantum operations increases.
+
+**Q18. What does num_samples represent?**  
+The number of random circuits generated for each sequence length.
+
+**Q19. What is the value of num_samples in this practical?**  
+5.
+
+**Q20. How many random circuits are generated in total?**
+
+\[
+5\times5=25
+\]
+
+Therefore, 25 circuits are generated.
+
+**Q21. What does shots represent?**  
+The number of times each circuit is executed.
+
+**Q22. How many shots are used?**  
+200 shots per circuit.
+
+**Q23. What is the total number of circuit executions?**
+
+\[
+25\times200=5000
+\]
+
+Therefore, 5000 total executions are performed.
+
+**Q24. What is a recovery operation?**  
+It is the final operation that ideally reverses the effect of the preceding Clifford sequence and returns the qubit to its initial state.
+
+**Q25. What is survival probability?**  
+It is the probability that the qubit is measured in its expected initial state after the sequence and recovery operation.
+
+### D. Result-Related Questions
+
+**Q26. What is EPC?**  
+EPC stands for Error Per Clifford. It estimates the average error associated with a Clifford operation.
+
+**Q27. What is alpha?**  
+Alpha is the decay parameter obtained from randomized benchmarking analysis.
+
+**Q28. What happens when alpha is close to 1?**  
+It generally indicates lower average gate error.
+
+**Q29. What happens when EPC increases?**  
+It indicates higher average gate error and poorer gate performance.
+
+**Q30. What is the relationship between alpha and EPC for single-qubit RB?**
+
+\[
+EPC=\frac{1-\alpha}{2}
+\]
+
+**Q31. What happens when sequence length increases?**  
+Noise generally accumulates, and the survival probability decreases.
+
+**Q32. What is the purpose of the results DataFrame?**  
+It displays the analysis results in a structured tabular format.
+
+### E. Qiskit-Related Questions
+
+**Q33. What is Qiskit?**  
+An open-source Python framework for quantum computing.
+
+**Q34. What is AerSimulator?**  
+It is a simulator used to execute quantum circuits on a classical computer.
+
+**Q35. What is StandardRB?**  
+It is a Qiskit Experiments class used to generate and analyse standard randomized benchmarking experiments.
+
+**Q36. What does physical_qubits=(0,) mean?**  
+It specifies that the experiment is performed on physical qubit 0.
+
+**Q37. What is the purpose of seed=1010?**  
+It helps make random sequence generation reproducible.
+
+**Q38. What does block_for_results() do?**  
+It waits until the experiment has completed and its results are available.
+
+**Q39. What does analysis_results(dataframe=True) do?**  
+It extracts the analysed experimental results in DataFrame format.
+
+**Q40. What does circuits()[0].draw() do?**  
+It displays the first generated randomized benchmarking circuit.
+
+### F. Tricky External Questions
+
+**Q41. Does randomized benchmarking measure the error of only one gate?**  
+Not directly. Standard RB estimates an average error over randomized Clifford operations.
+
+**Q42. Does randomized benchmarking require a real quantum computer?**  
+No. It can be performed on a simulator or an actual quantum device.
+
+**Q43. What is the difference between a noisy simulator and an ideal simulator?**  
+An ideal simulator does not intentionally introduce gate noise, whereas a noisy simulator applies a specified noise model.
+
+**Q44. Does increasing the number of shots eliminate quantum noise?**  
+No. It improves the statistical estimation of measurement probabilities but does not eliminate physical or simulated gate errors.
+
+**Q45. What is the main advantage of randomized benchmarking?**  
+It provides an estimate of average gate performance that is relatively robust to certain state-preparation and measurement errors.
+
+**Q46. What is the difference between EPC and gate error?**  
+EPC estimates the average error per Clifford operation. It is not necessarily the error rate of an individual physical gate such as X or CX.
+
+---
+
+## 7. IMPORTANT TECHNICAL OBSERVATIONS ABOUT YOUR CODE
+
+These are useful if the external examiner asks deeper questions.
+
+**1. Missing import**
+
+Your code uses `StandardRB`, but it does not import it. Add:
+
+`from qiskit_experiments.library import StandardRB`
+
+Otherwise, Python may raise:
+
+`NameError: name 'StandardRB' is not defined`
+
+**2. Why is CX noise added when only one qubit is selected?**
+
+Your experiment specifies:
+
+`physical_qubits=(0,)`
+
+This is a single-qubit randomized benchmarking experiment. Its generated sequences operate on one qubit, so the two-qubit CX noise that you added is generally not exercised.
+
+The CX noise model would become relevant in an experiment involving two-qubit operations, such as two-qubit randomized benchmarking.
+
+**3. What does 0.005 and 0.05 mean?**
+
+These are depolarizing noise parameters, not guaranteed measured gate error rates. The actual EPC is estimated from the experimental results.
+
+**4. What does the circuit display show?**
+
+`rb_experiment.circuits()[0].draw()` displays the first generated circuit. It does not display all 25 generated circuits.
+
+---
+
+## 8. IMPORTANT POINTS TO REMEMBER FOR THE EXTERNAL
+
+| Topic | Answer |
+|---|---|
+| Practical | Randomized Benchmarking |
+| Main purpose | Estimate average quantum gate errors |
+| Experiment class | StandardRB |
+| Simulator | AerSimulator |
+| Noise model | NoiseModel |
+| Noise type | Depolarizing noise |
+| Single-qubit error parameter | 0.005 (0.5%) |
+| Two-qubit error parameter | 0.05 (5%) |
+| Single-qubit gates with noise | X and SX |
+| Two-qubit gate with noise | CX |
+| Physical qubits | (0,) |
+| Sequence lengths | 1, 2, 4, 8, 16 |
+| Samples per length | 5 |
+| Total circuits | 25 |
+| Shots per circuit | 200 |
+| Total executions | 5000 |
+| Random seed | 1010 |
+| EPC | Error Per Clifford |
+| Alpha | Decay parameter |
+| Recovery operation | Ideally returns qubit to initial state |
+
+### One-Minute Explanation for the External
+
+Randomized Benchmarking is a technique used to estimate the average error rate of quantum gates. In this practical, we use Qiskit and AerSimulator to perform randomized benchmarking with a noise model. First, we define different sequence lengths, the number of random samples and the number of shots. Then, we create a noise model using depolarizing errors and apply it to X, SX and CX gates. We create a StandardRB experiment on physical qubit 0 and execute it using the noisy simulator. The experiment generates random Clifford gate sequences, applies recovery operations and measures the qubit. Finally, we analyse the results to estimate parameters such as alpha and Error Per Clifford (EPC), which help us understand the average gate error and performance of the quantum system.

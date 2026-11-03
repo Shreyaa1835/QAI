@@ -1,0 +1,1623 @@
+# AIM: To Implement Tarrataca's Quantum Production System for the 3-Puzzle Problem Using Qiskit
+
+**Note:** This practical implements a quantum-circuit-based representation of the 3-Puzzle problem using state preparation, Toffoli gates, controlled-SWAP gates and quantum measurement. We will understand how the puzzle configuration is represented and how the movement rules are applied.
+
+# 1. INSTALLATION AND EXECUTION COMMANDS
+
+**Installation commands:**
+
+**Windows:**
+```bash
+python -m pip install qiskit qiskit-aer
+python practical_3puzzle.py
+```
+
+**Ubuntu/Linux:**
+```bash
+pip install qiskit qiskit-aer
+python3 -m pip install qiskit qiskit-aer
+python3 practical_3puzzle.py
+```
+
+### Libraries used
+
+| Library | Purpose |
+|---|---|
+| Qiskit | Creating and designing quantum circuits. |
+| QuantumCircuit | Creating qubits, classical bits and quantum gates. |
+| Transpile | Converting circuits into a backend-compatible format. |
+| Qiskit Aer | Simulating quantum circuits. |
+| AerSimulator | Executing quantum circuits on a classical simulator. |
+
+---
+
+# 2. IMPORTING LIBRARIES
+
+### `from qiskit import QuantumCircuit, transpile`
+
+This statement imports two components from Qiskit.
+
+**1. QuantumCircuit**
+
+- Used to create a quantum circuit.
+- Allows us to add quantum gates and measurements.
+- Stores the complete sequence of quantum operations.
+
+**2. Transpile**
+
+- Converts the quantum circuit into a format supported by the simulator.
+- Optimizes the circuit for the selected backend.
+- Helps ensure compatibility with the execution environment.
+
+**Possible Viva Questions:**
+
+**Q1. What is Qiskit?**  
+Qiskit is an open-source Python framework used for quantum computing.
+
+**Q2. What is QuantumCircuit?**  
+It is a class used to create quantum circuits containing qubits, gates and measurements.
+
+**Q3. What is transpilation?**  
+Transpilation is the process of converting a quantum circuit into a format suitable for a particular backend.
+
+### `from qiskit_aer import AerSimulator`
+
+- Imports AerSimulator from Qiskit Aer.
+- It is used to simulate quantum circuit execution.
+- It allows us to execute quantum circuits without requiring physical quantum hardware.
+
+**Possible Viva Questions:**
+
+**Q1. What is Qiskit Aer?**  
+It is a simulation framework used to simulate quantum circuits.
+
+**Q2. What is AerSimulator?**  
+It is a backend used to simulate quantum circuit operations and measurements.
+
+**Q3. Do we need a real quantum computer for this practical?**  
+No. We use a classical computer to simulate quantum circuit behaviour.
+
+---
+
+# 3. CREATING THE QUANTUM CIRCUIT
+
+### `qc = QuantumCircuit(14, 8)`
+
+- Creates a quantum circuit using the QuantumCircuit class.
+- The first argument, 14, represents the number of qubits.
+- The second argument, 8, represents the number of classical bits.
+- The circuit contains:
+  - 14 quantum bits.
+  - 8 classical bits.
+- The circuit is stored in the variable `qc`.
+
+### Understanding the 14 Qubits
+
+The 14 qubits are divided according to their functions:
+
+| Qubit | Purpose |
+|---|---|
+| 0–7 | Store the 3-Puzzle configuration. |
+| 8 | Flag qubit. |
+| 9–12 | Trace qubits used to identify empty-cell positions. |
+| 13 | Path descriptor qubit. |
+
+**Possible Viva Questions:**
+
+**Q1. What is a qubit?**  
+A qubit is the basic unit of quantum information. It can exist in a superposition of |0⟩ and |1⟩.
+
+**Q2. Why are 14 qubits used?**  
+Eight qubits represent the puzzle configuration, one is used as a flag, four are used as trace qubits, and one represents the path descriptor.
+
+**Q3. Why are only eight classical bits used?**  
+Because only the eight puzzle-configuration qubits are measured and stored as classical bits.
+
+**Q4. What is the difference between a qubit and a classical bit?**
+
+- Qubit: Can exist in superposition.
+- Classical bit: Stores either 0 or 1.
+
+---
+
+# 4. STATE PREPARATION
+
+State preparation means initializing the quantum circuit into a particular starting configuration.
+
+### `qc.x(0)`
+
+- Applies a Pauli-X gate to qubit 0.
+- Changes its state from |0⟩ to |1⟩.
+
+### `qc.x(4)`
+
+- Applies an X gate to qubit 4.
+- Changes its state from |0⟩ to |1⟩.
+
+### `qc.x(5)`
+
+- Applies an X gate to qubit 5.
+- Changes its state from |0⟩ to |1⟩.
+
+### `qc.x(7)`
+
+- Applies an X gate to qubit 7.
+- Changes its state from |0⟩ to |1⟩.
+
+**Understanding the initial state:**
+
+Initially, all qubits are in the |0⟩ state.
+
+After applying these four X gates:
+
+- q0 = 1
+- q1 = 0
+- q2 = 0
+- q3 = 0
+- q4 = 1
+- q5 = 1
+- q6 = 0
+- q7 = 1
+
+Therefore, the first eight qubits contain:
+
+**10001101** (when written in qubit-index order, q0 through q7).
+
+In the puzzle representation, these bits are grouped into four pairs:
+
+| Position | Qubits | Initial State |
+|---|---|---|
+| Position 0 | q0, q1 | 10 |
+| Position 1 | q2, q3 | 00 |
+| Position 2 | q4, q5 | 11 |
+| Position 3 | q6, q7 | 01 |
+
+**Possible Viva Questions:**
+
+**Q1. What is state preparation?**  
+State preparation is the process of initializing qubits into the required quantum states before performing operations.
+
+**Q2. What is an X gate?**  
+An X gate is a Pauli-X gate that flips a qubit from 0 to 1 or 1 to 0.
+
+**Q3. What is the initial state of all qubits?**  
+All qubits are initially in the |0⟩ state.
+
+**Q4. Why are X gates used during state preparation?**  
+To initialize selected qubits to |1⟩.
+
+**Q5. What is the purpose of initializing the puzzle?**  
+To provide a starting configuration on which the movement rules can operate.
+
+---
+
+# 5. UNDERSTANDING FLAG, TRACE AND PATH DESCRIPTOR
+
+The following comments explain the intended roles of additional qubits.
+
+### Flag represented by qubit 8
+
+- Qubit 8 is used as a flag.
+- It is involved in controlling the movement operations.
+- It acts as a control for the CSWAP gates.
+- Its state determines whether the controlled swap is performed.
+
+### Trace represented by qubits 9, 10, 11, 12
+
+- These four qubits represent trace information.
+- Each trace qubit is associated with one possible empty-cell position.
+- They are used as control inputs for the Toffoli gates.
+
+### Path descriptor represented by qubit 13
+
+- Qubit 13 represents the movement direction.
+- It is initially placed into superposition using a Hadamard gate.
+- It helps represent clockwise and counter-clockwise movement alternatives.
+
+**Possible Viva Questions:**
+
+**Q1. What is a flag qubit?**  
+A flag qubit is an additional qubit used to store a control or condition-related value.
+
+**Q2. What is a trace qubit?**  
+A trace qubit stores information associated with a particular condition or computational path.
+
+**Q3. What is a path descriptor?**  
+It represents information about the selected computational path or movement direction.
+
+**Q4. Why are additional qubits required?**  
+They are used to represent control conditions and intermediate information during quantum operations.
+
+---
+
+# 6. APPLYING THE HADAMARD GATE TO THE PATH DESCRIPTOR
+
+### `qc.h(13)`
+
+- Applies the Hadamard gate to qubit 13.
+- Qubit 13 represents the path descriptor.
+- The Hadamard gate creates an equal superposition of |0⟩ and |1⟩.
+- These two states represent two possible movement directions in the intended design.
+
+**Mathematical representation:**
+
+H|0⟩ = (|0⟩ + |1⟩)/√2
+
+Therefore:
+
+- P(0) = 50%.
+- P(1) = 50%.
+
+**Possible Viva Questions:**
+
+**Q1. What is a Hadamard gate?**  
+It is a single-qubit quantum gate used to create superposition.
+
+**Q2. Why is the Hadamard gate applied to qubit 13?**  
+To place the path descriptor into an equal superposition of two possible values.
+
+**Q3. What is superposition?**  
+Superposition is a quantum principle in which a qubit exists in a combination of multiple possible quantum states.
+
+**Q4. What do 0 and 1 represent in the path descriptor?**  
+They are intended to represent the two movement directions.
+
+**Q5. Does the Hadamard gate randomly select one direction immediately?**  
+No. It creates a superposition. A definite measurement outcome is obtained only when the qubit is measured.
+
+---
+
+# 7. APPLYING THE BARRIER
+
+### `qc.barrier()`
+
+- Adds a barrier to the quantum circuit.
+- A barrier separates different groups of quantum operations.
+- It helps organize the circuit into logical sections.
+- It prevents transpiler optimization from moving operations across the barrier.
+
+**Importance in this practical:**
+
+It separates state preparation from the empty-cell identification operations.
+
+**Possible Viva Questions:**
+
+**Q1. What is a barrier in Qiskit?**  
+A barrier is an instruction used to separate groups of quantum operations.
+
+**Q2. Does a barrier perform a quantum operation?**  
+No. It does not change the quantum state.
+
+**Q3. Why is a barrier used?**  
+To organize circuit stages and control optimization across circuit sections.
+
+---
+
+# 8. IDENTIFYING THE POSITION OF THE EMPTY CELL
+
+This section uses Toffoli gates to calculate trace information for the four pairs of puzzle qubits.
+
+### `qc.ccx(0, 1, 9)`
+
+- Applies a Toffoli gate.
+- Qubits 0 and 1 are control qubits.
+- Qubit 9 is the target qubit.
+- The target flips only when both control qubits are 1.
+
+### `qc.ccx(2, 3, 10)`
+
+- Qubits 2 and 3 are the control qubits.
+- Qubit 10 is the target.
+- It calculates trace information for the second pair.
+
+### `qc.ccx(4, 5, 11)`
+
+- Qubits 4 and 5 are the control qubits.
+- Qubit 11 is the target.
+- It calculates trace information for the third pair.
+
+### `qc.ccx(6, 7, 12)`
+
+- Qubits 6 and 7 are the control qubits.
+- Qubit 12 is the target.
+- It calculates trace information for the fourth pair.
+
+### Understanding the Toffoli Gate
+
+A Toffoli gate has:
+
+- Two control qubits.
+- One target qubit.
+
+The target flips only when both control qubits are 1.
+
+**Truth table:**
+
+| Control 1 | Control 2 | Target |
+|---|---|---|
+| 0 | 0 | No flip |
+| 0 | 1 | No flip |
+| 1 | 0 | No flip |
+| 1 | 1 | Flip |
+
+### Important observation about your initial state
+
+The initial puzzle pairs are:
+
+| Pair | Initial State | Both Bits 1? | Trace Output |
+|---|---|---|---|
+| q0, q1 | 10 | No | 0 |
+| q2, q3 | 00 | No | 0 |
+| q4, q5 | 11 | Yes | 1 |
+| q6, q7 | 01 | No | 0 |
+
+Therefore, after these four Toffoli operations:
+
+- q9 = 0
+- q10 = 0
+- q11 = 1
+- q12 = 0
+
+**Important technical clarification:** The Toffoli gates detect pairs containing `11`, not pairs containing `00`. If the empty cell is represented by `00`, these operations do not correctly identify it. The comments describe empty-cell identification, but the gate logic does not match that description.
+
+**Possible Viva Questions:**
+
+**Q1. What is a Toffoli gate?**  
+A three-qubit controlled-controlled-NOT gate.
+
+**Q2. Why are four Toffoli gates used?**  
+To process the four pairs of puzzle qubits separately.
+
+**Q3. What is the purpose of trace qubits?**  
+They store intermediate information about the conditions associated with each puzzle position.
+
+**Q4. What is the difference between CNOT and Toffoli?**  
+CNOT has one control and one target, whereas Toffoli has two controls and one target.
+
+**Q5. What is the output of a Toffoli gate when both control qubits are 0?**  
+The target remains unchanged.
+
+**Q6. Does the current Toffoli logic detect the empty cell represented by 00?**  
+No. It detects the pair 11 because both control qubits must be 1.
+
+---
+
+# 9. APPLYING THE SECOND BARRIER
+
+### `qc.barrier()`
+
+- Separates the empty-cell identification stage from the movement-rule stage.
+- Makes the quantum circuit easier to understand.
+- Helps preserve the logical grouping of operations during transpilation.
+
+**Possible Viva Question:**
+
+**Q. Why are barriers placed between different rules?**
+
+To separate the circuit into logical stages and make the sequence of operations easier to understand.
+
+---
+
+# 10. RULE 1: EMPTY CELL AT POSITION 0, 1
+
+This section contains clockwise and counter-clockwise movement operations.
+
+## A. Clockwise Movement
+
+### `qc.ccx(9, 13, 8)`
+
+- Applies a Toffoli gate.
+- Qubit 9 is the first control.
+- Qubit 13 is the second control.
+- Qubit 8 is the target flag.
+- The flag flips when both control qubits are 1.
+
+### `qc.cswap(8, 0, 4)`
+
+- Applies a controlled-SWAP gate.
+- Qubit 8 is the control.
+- Qubits 0 and 4 are the targets.
+- If qubit 8 is 1, the states of qubits 0 and 4 are exchanged.
+- If qubit 8 is 0, no swap occurs.
+
+### `qc.cswap(8, 1, 5)`
+
+- Uses qubit 8 as the control.
+- Swaps qubits 1 and 5 when the control is 1.
+
+**Understanding both CSWAP operations:**
+
+The two operations swap:
+
+- Pair 0: q0 and q4.
+- Pair 1: q1 and q5.
+
+Together, they exchange the two-bit values stored in positions 0 and 2.
+
+**Possible Viva Questions:**
+
+**Q1. What is a CSWAP gate?**  
+CSWAP stands for Controlled-SWAP. It exchanges two target qubits when the control qubit is 1.
+
+**Q2. What is another name for CSWAP?**  
+Fredkin gate.
+
+**Q3. How many qubits are required for CSWAP?**  
+Three qubits: one control and two target qubits.
+
+**Q4. What happens when the control is 0?**  
+The target qubits remain unchanged.
+
+**Q5. What happens when the control is 1?**  
+The two target qubits exchange their states.
+
+**Q6. Why are two CSWAP gates used together?**  
+To exchange two complete two-bit puzzle cells.
+
+## B. Counter-Clockwise Movement
+
+### `qc.ccx(9, 13, 8)`
+
+- Applies a Toffoli gate using qubits 9 and 13 as controls.
+- Qubit 8 acts as the target flag.
+- It conditionally changes the flag based on the two control qubits.
+
+### `qc.x(13)`
+
+- Applies an X gate to the path descriptor.
+- Changes its value from 0 to 1 or 1 to 0.
+- It is used to change the direction condition.
+
+### `qc.ccx(9, 13, 8)`
+
+- Applies the Toffoli gate again.
+- Updates the flag according to the current control states.
+
+### `qc.cswap(8, 0, 2)`
+
+- Uses qubit 8 as the control.
+- Swaps qubits 0 and 2 when the flag is 1.
+
+### `qc.cswap(8, 1, 3)`
+
+- Uses qubit 8 as the control.
+- Swaps qubits 1 and 3 when the flag is 1.
+
+Together, these operations exchange positions 0 and 1.
+
+### `qc.ccx(9, 13, 8)`
+
+- Applies the Toffoli gate again.
+- Updates the flag.
+
+### `qc.x(13)`
+
+- Applies the X gate to qubit 13 again.
+- Restores the original path-descriptor basis state.
+
+**Possible Viva Questions:**
+
+**Q1. What is counter-clockwise movement?**  
+It represents movement in the opposite direction to clockwise movement.
+
+**Q2. Why is the X gate applied to the path descriptor?**  
+It toggles the path descriptor to represent the alternate direction condition.
+
+**Q3. Why is X applied twice in this sequence?**  
+Two X operations restore the original computational-basis value because X² = I.
+
+**Q4. What is the difference between clockwise and counter-clockwise movement?**  
+They represent two opposite directions of movement in the puzzle.
+
+---
+
+# 11. RULE 2: EMPTY CELL AT POSITION 2, 3
+
+This section processes the second possible empty-cell location.
+
+## A. Clockwise Movement
+
+### `qc.ccx(10, 13, 8)`
+
+- Qubit 10 and qubit 13 are control qubits.
+- Qubit 8 is the target flag.
+- The flag flips when both controls are 1.
+
+### `qc.cswap(8, 2, 6)`
+
+- Uses qubit 8 as the control.
+- Swaps qubits 2 and 6.
+
+### `qc.cswap(8, 3, 7)`
+
+- Uses qubit 8 as the control.
+- Swaps qubits 3 and 7.
+
+Together, they exchange puzzle positions 1 and 3.
+
+## B. Counter-Clockwise Movement
+
+### `qc.ccx(10, 13, 8)`
+
+Applies the Toffoli gate to update the flag.
+
+### `qc.x(13)`
+
+Flips the path descriptor to represent the opposite direction condition.
+
+### `qc.ccx(10, 13, 8)`
+
+Applies the Toffoli gate again.
+
+### `qc.cswap(8, 2, 0)`
+
+Conditionally swaps qubits 2 and 0.
+
+### `qc.cswap(8, 3, 1)`
+
+Conditionally swaps qubits 3 and 1.
+
+Together, they exchange puzzle positions 1 and 0.
+
+### `qc.ccx(10, 13, 8)`
+
+Updates the flag again.
+
+### `qc.x(13)`
+
+Restores the original computational-basis value of the path descriptor.
+
+**Possible Viva Questions:**
+
+**Q1. Which trace qubit represents Rule 2?**  
+Qubit 10.
+
+**Q2. Which positions are exchanged during clockwise movement?**  
+Positions 1 and 3.
+
+**Q3. Which positions are exchanged during counter-clockwise movement?**  
+Positions 1 and 0.
+
+**Q4. Why are CSWAP gates used?**  
+To exchange puzzle-cell values conditionally.
+
+---
+
+# 12. RULE 3: EMPTY CELL AT POSITION 4, 5
+
+This section processes the third possible empty-cell location.
+
+## A. Clockwise Movement
+
+### `qc.ccx(11, 13, 8)`
+
+- Uses qubits 11 and 13 as controls.
+- Qubit 8 is the target flag.
+
+### `qc.cswap(8, 4, 0)`
+
+Conditionally swaps qubits 4 and 0.
+
+### `qc.cswap(8, 5, 1)`
+
+Conditionally swaps qubits 5 and 1.
+
+Together, these operations exchange positions 2 and 0.
+
+## B. Counter-Clockwise Movement
+
+### `qc.ccx(11, 13, 8)`
+
+Updates the flag using the Toffoli gate.
+
+### `qc.x(13)`
+
+Flips the path descriptor.
+
+### `qc.ccx(11, 13, 8)`
+
+Applies the Toffoli gate again.
+
+### `qc.cswap(8, 4, 6)`
+
+Conditionally swaps qubits 4 and 6.
+
+### `qc.cswap(8, 5, 7)`
+
+Conditionally swaps qubits 5 and 7.
+
+Together, these operations exchange positions 2 and 3.
+
+### `qc.ccx(11, 13, 8)`
+
+Updates the flag again.
+
+### `qc.x(13)`
+
+Restores the original path-descriptor value.
+
+**Possible Viva Questions:**
+
+**Q1. Which trace qubit is used in Rule 3?**  
+Qubit 11.
+
+**Q2. Which positions are exchanged during clockwise movement?**  
+Positions 2 and 0.
+
+**Q3. Which positions are exchanged during counter-clockwise movement?**  
+Positions 2 and 3.
+
+---
+
+# 13. RULE 4: EMPTY CELL AT POSITION 6, 7
+
+This section processes the fourth possible empty-cell location.
+
+## A. Clockwise Movement
+
+### `qc.ccx(12, 13, 8)`
+
+- Qubit 12 and qubit 13 are the control qubits.
+- Qubit 8 is the target flag.
+
+### `qc.cswap(8, 6, 2)`
+
+Conditionally swaps qubits 6 and 2.
+
+### `qc.cswap(8, 7, 3)`
+
+Conditionally swaps qubits 7 and 3.
+
+Together, they exchange positions 3 and 1.
+
+## B. Counter-Clockwise Movement
+
+### `qc.ccx(12, 13, 8)`
+
+Applies the Toffoli gate to update the flag.
+
+### `qc.x(13)`
+
+Flips the path descriptor.
+
+### `qc.ccx(12, 13, 8)`
+
+Applies the Toffoli gate again.
+
+### `qc.cswap(8, 6, 4)`
+
+Conditionally swaps qubits 6 and 4.
+
+### `qc.cswap(8, 7, 5)`
+
+Conditionally swaps qubits 7 and 5.
+
+Together, they exchange positions 3 and 2.
+
+### `qc.ccx(12, 13, 8)`
+
+Updates the flag again.
+
+### `qc.x(13)`
+
+Restores the path descriptor.
+
+**Possible Viva Questions:**
+
+**Q1. Which trace qubit is used in Rule 4?**  
+Qubit 12.
+
+**Q2. Which positions are exchanged during clockwise movement?**  
+Positions 3 and 1.
+
+**Q3. Which positions are exchanged during counter-clockwise movement?**  
+Positions 3 and 2.
+
+**Q4. Why are four rules required?**  
+Because the puzzle has four possible cell positions in this representation, and each position requires its own movement conditions.
+
+---
+
+# 14. UNDERSTANDING ALL FOUR MOVEMENT RULES
+
+This table summarizes the operations in your program.
+
+| Rule | Trace Qubit | Clockwise Swap | Counter-Clockwise Swap |
+|---|---|---|---|
+| Rule 1 | q9 | Position 0 ↔ 2 | Position 0 ↔ 1 |
+| Rule 2 | q10 | Position 1 ↔ 3 | Position 1 ↔ 0 |
+| Rule 3 | q11 | Position 2 ↔ 0 | Position 2 ↔ 3 |
+| Rule 4 | q12 | Position 3 ↔ 1 | Position 3 ↔ 2 |
+
+**Important concept:**
+
+Each puzzle position is represented by two qubits.
+
+For example:
+
+- Position 0 = q0, q1.
+- Position 1 = q2, q3.
+- Position 2 = q4, q5.
+- Position 3 = q6, q7.
+
+Therefore, swapping two puzzle positions requires two CSWAP operations.
+
+---
+
+# 15. APPLYING THE FINAL BARRIER
+
+### `qc.barrier()`
+
+- Separates the movement-rule stage from the measurement stage.
+- Helps organize the circuit.
+- Does not change the quantum state.
+
+**Possible Viva Question:**
+
+**Q. Why is a barrier used before measurement?**
+
+To separate the movement operations from the final measurement stage and make the circuit easier to interpret.
+
+---
+
+# 16. MEASURING THE PUZZLE CONFIGURATION
+
+### `qc.measure(range(8), range(8))`
+
+- Measures the first eight qubits.
+- Stores their measurement outcomes in eight classical bits.
+- `range(8)` generates indices 0 to 7.
+- The first range represents the quantum qubits.
+- The second range represents the classical bits.
+
+**Mapping:**
+
+| Quantum Qubit | Classical Bit |
+|---|---|
+| q0 | c0 |
+| q1 | c1 |
+| q2 | c2 |
+| q3 | c3 |
+| q4 | c4 |
+| q5 | c5 |
+| q6 | c6 |
+| q7 | c7 |
+
+**Important:**
+
+Only the eight puzzle qubits are measured.
+
+The following qubits are not measured:
+
+- q8: Flag.
+- q9–q12: Trace.
+- q13: Path descriptor.
+
+**Possible Viva Questions:**
+
+**Q1. Why are only eight qubits measured?**  
+Because the program is designed to display the final puzzle configuration stored in the first eight qubits.
+
+**Q2. Why are eight classical bits used?**  
+To store the measurement results of the eight puzzle qubits.
+
+**Q3. What does measurement do?**  
+It converts quantum information into classical binary values.
+
+**Q4. What is the difference between quantum and classical registers?**  
+Quantum registers store qubits, while classical registers store measurement results.
+
+---
+
+# 17. DISPLAYING THE PRACTICAL TITLE AND CIRCUIT
+
+### `print("Tarrataca's Quantum Production System - 3 Puzzle")`
+
+- Displays the practical title.
+- Identifies the implementation as a quantum production-system approach to the 3-Puzzle problem.
+
+### `print("\nQuantum Circuit:")`
+
+- Displays the Quantum Circuit heading.
+- `\n` moves the cursor to a new line.
+
+### `print(qc.draw())`
+
+- Generates and displays the quantum circuit.
+- Shows the 14 qubit lines.
+- Displays the X, H, CCX and CSWAP gates.
+- Displays barriers and measurement operations.
+
+**Possible Viva Questions:**
+
+**Q1. What is a quantum circuit diagram?**  
+It is a graphical representation of qubits and the operations performed on them.
+
+**Q2. What does H represent?**  
+Hadamard gate.
+
+**Q3. What does X represent?**  
+Pauli-X gate.
+
+**Q4. What does CCX represent?**  
+Toffoli gate.
+
+**Q5. What does CSWAP represent?**  
+Controlled-SWAP or Fredkin gate.
+
+---
+
+# 18. CREATING THE SIMULATOR
+
+### `simulator = AerSimulator()`
+
+- Creates an AerSimulator object.
+- It provides a classical simulation environment for quantum circuits.
+- It allows the circuit to be executed without actual quantum hardware.
+
+**Possible Viva Questions:**
+
+**Q1. What is AerSimulator?**  
+It is a Qiskit Aer backend used to simulate quantum circuits.
+
+**Q2. Is AerSimulator a real quantum computer?**  
+No. It simulates quantum behaviour using classical computing.
+
+---
+
+# 19. TRANSPILING THE CIRCUIT
+
+### `compiled_circuit = transpile(qc, simulator)`
+
+- Converts the original quantum circuit into a simulator-compatible circuit.
+- `qc` is the original circuit.
+- `simulator` is the target backend.
+- The compiled circuit is stored in `compiled_circuit`.
+
+**Possible Viva Questions:**
+
+**Q1. Why is transpilation required?**  
+To make the circuit compatible with the target backend.
+
+**Q2. Does transpilation change the logical result?**  
+It is designed to preserve the intended computation while changing the circuit implementation.
+
+---
+
+# 20. EXECUTING THE CIRCUIT
+
+### `job = simulator.run(compiled_circuit, shots=1024)`
+
+- Executes the compiled circuit on the simulator.
+- `compiled_circuit` specifies which circuit to execute.
+- `shots=1024` means the circuit is executed 1,024 times.
+- The execution task is stored in `job`.
+
+**What are shots?**
+
+Shots represent the number of times a quantum circuit is executed to collect measurement outcomes.
+
+Here:
+
+Shots = 1024.
+
+Therefore, the simulator collects 1,024 measurement samples.
+
+**Possible Viva Questions:**
+
+**Q1. What are shots?**  
+Shots represent the number of repeated circuit executions.
+
+**Q2. Why are 1024 shots used?**  
+To collect multiple measurement outcomes and study their frequencies.
+
+**Q3. Will every shot produce a different configuration?**  
+No. Some configurations may repeat.
+
+---
+
+# 21. RETRIEVING THE EXECUTION RESULT
+
+### `result = job.result()`
+
+- Retrieves the execution result.
+- The result contains the measurement information obtained from the simulator.
+- It is stored in the variable `result`.
+
+**Possible Viva Questions:**
+
+**Q1. What does job.result() do?**  
+It retrieves the completed execution results.
+
+**Q2. Why is the result stored in a variable?**  
+To access the measurement data generated by the circuit.
+
+---
+
+# 22. EXTRACTING THE MEASUREMENT COUNTS
+
+### `counts = result.get_counts()`
+
+- Extracts the measurement outcomes.
+- Returns a dictionary.
+- Each key represents a measured eight-bit configuration.
+- Each value represents how frequently that configuration occurred.
+
+**Example:**
+
+```text
+{'00000000': 200, '10001101': 300}
+```
+
+This is an illustrative example, not the expected output of your circuit.
+
+**Possible Viva Questions:**
+
+**Q1. What is get_counts()?**  
+It returns the frequency of each measurement outcome.
+
+**Q2. What is a dictionary?**  
+A Python data structure that stores key-value pairs.
+
+**Q3. What does the key represent?**  
+The measured puzzle configuration.
+
+**Q4. What does the value represent?**  
+The number of times that configuration occurred.
+
+---
+
+# 23. DISPLAYING THE GENERATED CONFIGURATIONS
+
+### `print("\nGenerated 3-Puzzle Configurations:")`
+
+- Displays the heading for the generated puzzle configurations.
+- `\n` creates a new line.
+
+### `for state, frequency in sorted(counts.items()):`
+
+- Iterates through the measurement results.
+- `counts.items()` returns key-value pairs.
+- `sorted()` sorts the configurations.
+- `state` stores the measured binary configuration.
+- `frequency` stores its occurrence count.
+
+### `print(state, ":", frequency)`
+
+- Displays each measured configuration.
+- Displays the number of times it occurred.
+
+**Possible Viva Questions:**
+
+**Q1. What does items() do?**  
+It returns the key-value pairs of a dictionary.
+
+**Q2. Why is sorted() used?**  
+To display the configurations in sorted order.
+
+**Q3. What does frequency represent?**  
+The number of times a configuration was observed.
+
+---
+
+# 24. CALCULATING TOTAL CONFIGURATIONS GENERATED
+
+### `print("\nTotal Configurations Generated:", sum(counts.values()))`
+
+- Displays the total number of measurement outcomes.
+- `counts.values()` retrieves all frequencies.
+- `sum()` adds all the frequencies.
+- Since shots = 1024, the total should be 1024.
+
+**Possible Viva Questions:**
+
+**Q1. What does values() do?**  
+It retrieves all values from a dictionary.
+
+**Q2. What does sum() do?**  
+It adds all the numerical values.
+
+**Q3. What should the total configurations generated be?**  
+1024, because the circuit is executed for 1,024 shots.
+
+---
+
+# 25. COUNTING UNIQUE CONFIGURATIONS
+
+### `print("Unique Configurations:", len(counts))`
+
+- Displays the number of different configurations observed.
+- `len()` calculates the number of dictionary keys.
+- Each key represents one unique measurement result.
+
+**Possible Viva Questions:**
+
+**Q1. What does len() do?**  
+It returns the number of elements in a collection.
+
+**Q2. What are unique configurations?**  
+They are the different puzzle configurations observed during circuit execution.
+
+**Q3. What is the maximum possible number of configurations for eight measured qubits?**
+
+2⁸ = 256.
+
+---
+
+# 26. UNDERSTANDING THE COMPLETE OUTPUT
+
+First, an important point: **your current code does not generate four valid puzzle movements as its output.** The trace logic, flag logic and path-direction logic do not implement the intended movement conditions correctly.
+
+We can determine the actual output of your circuit by following the operations.
+
+## Step 1: Initial puzzle configuration
+
+The first eight qubits are initialized as follows:
+
+| Qubit | Initial Value |
+|---|---:|
+| q0 | 1 |
+| q1 | 0 |
+| q2 | 0 |
+| q3 | 0 |
+| q4 | 1 |
+| q5 | 1 |
+| q6 | 0 |
+| q7 | 1 |
+
+The initial configuration in qubit-index order is:
+
+**10001101**
+
+## Step 2: Path descriptor
+
+The Hadamard gate is applied to q13.
+
+Therefore:
+
+| Path Descriptor | Probability |
+|---|---:|
+| 0 | 50% |
+| 1 | 50% |
+
+## Step 3: Trace calculation
+
+The four Toffoli gates calculate whether both bits of each pair are 1.
+
+The resulting trace values are:
+
+- q9 = 0
+- q10 = 0
+- q11 = 1
+- q12 = 0
+
+## Step 4: Movement operations
+
+The movement operations are controlled by the flag qubit q8.
+
+However, the flag starts in |0⟩, and the Toffoli operations toggle it rather than simply setting it to the required condition.
+
+Also, the trace qubit q11 is 1, and the path descriptor is in superposition.
+
+Consequently, the later controlled-SWAP operations can modify the puzzle configuration.
+
+## Step 5: Expected measurement outcomes
+
+For the circuit exactly as written, the two possible measured outcomes are:
+
+- `10001101`
+- `00111001`
+
+Their theoretical probabilities are:
+
+- `10001101`: 50%
+- `00111001`: 50%
+
+With 1,024 shots, the expected frequencies are approximately:
+
+- `10001101`: 512
+- `00111001`: 512
+
+The actual frequencies can vary.
+
+**Important:** Qiskit displays classical measurement strings with the highest-index classical bit on the left. The binary strings above follow Qiskit's displayed convention.
+
+### Illustrative output
+
+```text
+Tarrataca's Quantum Production System - 3 Puzzle
+
+Quantum Circuit:
+[Quantum circuit diagram]
+
+Generated 3-Puzzle Configurations:
+00111001 : 510
+10001101 : 514
+
+Total Configurations Generated: 1024
+Unique Configurations: 2
+```
+
+The frequencies are illustrative.
+
+### Explanation of the output
+
+| Output | Meaning |
+|---|---|
+| Tarrataca's Quantum Production System - 3 Puzzle | Practical title. |
+| Quantum Circuit | Displays all quantum operations. |
+| Generated 3-Puzzle Configurations | Displays the measured configurations. |
+| Binary configuration | Represents the measured values of eight puzzle qubits. |
+| Frequency | Number of occurrences of a configuration. |
+| Total Configurations Generated | Total number of shots, 1024. |
+| Unique Configurations | Number of distinct configurations observed, expected to be 2 here. |
+
+---
+
+# 27. IMPORTANT CONCEPTS RELATED TO THE AIM
+
+## 1. What is Artificial Intelligence?
+
+Artificial Intelligence (AI) is a branch of computer science that focuses on creating systems capable of performing tasks that generally require human intelligence.
+
+Examples include:
+
+- Problem-solving.
+- Decision-making.
+- Planning.
+- Learning.
+- Reasoning.
+
+## 2. What is a Production System?
+
+A production system is a problem-solving approach that uses a collection of rules to determine which actions should be performed.
+
+It generally consists of three major components:
+
+**1. Rule Base**
+
+Contains the rules used to solve the problem.
+
+Example:
+
+IF the empty cell is at position 0, THEN move the appropriate adjacent tile.
+
+**2. Working Memory**
+
+Stores the current state of the problem.
+
+Example:
+
+The current arrangement of tiles in the puzzle.
+
+**3. Control Strategy**
+
+Determines which rule should be selected and executed.
+
+Example:
+
+Selecting clockwise or counter-clockwise movement.
+
+**Importance:**
+
+The production-system approach helps represent the puzzle as a collection of conditions and actions.
+
+## 3. What is Tarrataca's Quantum Production System?
+
+Tarrataca's Quantum Production System is an approach to representing production-system operations using quantum computational concepts.
+
+It uses quantum states and gates to represent conditions, control operations and alternative computational paths.
+
+In this practical, the intended idea is to represent the puzzle state and its movement rules using qubits and controlled quantum operations.
+
+**Important:** Your code is a quantum-circuit-based representation inspired by this approach. It does not, by itself, establish a complete implementation of a general quantum production system.
+
+## 4. What is the 3-Puzzle Problem?
+
+The 3-Puzzle is a simplified sliding-tile puzzle.
+
+It contains:
+
+- Three numbered tiles.
+- One empty cell.
+- A 2 × 2 arrangement.
+
+The objective is to move the tiles until the required goal configuration is obtained.
+
+A tile can move into the empty position if it is adjacent to the empty cell.
+
+**Example configuration:**
+
+| 1 | 2 |
+|---|---|
+| 3 | Empty |
+
+A legal move exchanges the empty cell with one adjacent tile.
+
+## 5. What is a Puzzle Configuration?
+
+A puzzle configuration is the current arrangement of all tiles and the empty cell.
+
+For example:
+
+| 1 | Empty |
+|---|---|
+| 2 | 3 |
+
+A different arrangement represents a different state of the puzzle.
+
+## 6. What is State Space?
+
+State space is the collection of all possible states of a problem.
+
+For a 2 × 2 puzzle containing four distinct elements:
+
+4! = 24 possible arrangements.
+
+However, for the standard sliding 2 × 2 puzzle, only 12 configurations are reachable from a given starting state through legal moves.
+
+## 7. What is a Production Rule?
+
+A production rule is a condition-action statement.
+
+It generally follows:
+
+IF condition THEN action.
+
+Example:
+
+IF the empty cell is at position 0 and movement is allowed, THEN swap the empty cell with an adjacent tile.
+
+Production rules are used to determine legal movements.
+
+## 8. What is State Preparation?
+
+State preparation is the process of initializing qubits into a required state before applying quantum operations.
+
+In your practical, X gates are used to initialize selected puzzle qubits to 1.
+
+## 9. What is a Hadamard Gate?
+
+The Hadamard gate creates superposition.
+
+Mathematical representation:
+
+H|0⟩ = (|0⟩ + |1⟩)/√2
+
+It gives equal probability to measuring 0 or 1.
+
+In your practical, it is applied to the path descriptor qubit.
+
+## 10. What is a Toffoli Gate?
+
+A Toffoli gate is a three-qubit quantum gate.
+
+It contains:
+
+- Two control qubits.
+- One target qubit.
+
+The target flips only when both control qubits are 1.
+
+It is used in your program to calculate trace information and update the flag.
+
+## 11. What is a Controlled-SWAP Gate?
+
+A controlled-SWAP gate is also known as the Fredkin gate.
+
+It swaps two target qubits only when the control qubit is 1.
+
+In your practical, two CSWAP operations are used to exchange two complete puzzle positions.
+
+## 12. What is a Flag Qubit?
+
+A flag qubit is used to store a condition or control value.
+
+In your practical, q8 is intended to determine whether a movement operation should take place.
+
+## 13. What is a Trace Qubit?
+
+A trace qubit stores intermediate information about a condition or computational path.
+
+Your practical uses four trace qubits to represent the four possible empty-cell positions.
+
+## 14. What is a Path Descriptor?
+
+A path descriptor stores information about an alternative computational path.
+
+Your program uses q13 to represent the intended movement direction.
+
+## 15. What is Quantum Superposition?
+
+Superposition is a fundamental quantum principle in which a qubit can exist in a combination of states.
+
+For example:
+
+|ψ⟩ = (|0⟩ + |1⟩)/√2
+
+It allows quantum circuits to represent multiple computational possibilities in a single quantum state.
+
+## 16. What is Quantum Entanglement?
+
+Entanglement is a quantum phenomenon in which two or more qubits share a joint state and exhibit correlations.
+
+It can be created using gates such as CNOT when the qubits are appropriately initialized.
+
+## 17. What is a Barrier?
+
+A barrier is an instruction that separates different sections of a quantum circuit.
+
+It does not change the quantum state.
+
+## 18. What is Quantum Measurement?
+
+Measurement converts quantum information into classical information.
+
+Each measured qubit produces either 0 or 1.
+
+## 19. What is AerSimulator?
+
+AerSimulator is a Qiskit Aer backend used to simulate quantum circuits on a classical computer.
+
+## 20. What are Shots?
+
+Shots represent the number of times a quantum circuit is executed to collect measurement outcomes.
+
+In your practical:
+
+Shots = 1024.
+
+Therefore, 1,024 measurement samples are collected.
+
+---
+
+# 28. IMPORTANT AIM-BASED VIVA QUESTIONS WITH ANSWERS
+
+### Q1. What is the main aim of this practical?
+
+The aim is to implement a quantum-circuit-based representation of Tarrataca's Quantum Production System for the 3-Puzzle problem using Qiskit.
+
+### Q2. What is a 3-Puzzle problem?
+
+It is a sliding-tile puzzle consisting of three numbered tiles and one empty cell arranged in a 2 × 2 grid.
+
+### Q3. What is a production system?
+
+A production system is a rule-based problem-solving technique that uses conditions and actions to reach a goal.
+
+### Q4. What are the three components of a production system?
+
+1. Rule Base.
+2. Working Memory.
+3. Control Strategy.
+
+### Q5. What is a production rule?
+
+A production rule is an IF-THEN statement used to determine an action based on a condition.
+
+### Q6. What is the purpose of the flag qubit?
+
+It stores a control condition that determines whether a movement operation is performed.
+
+### Q7. What is the purpose of trace qubits?
+
+They store intermediate information about the four possible empty-cell positions.
+
+### Q8. What is the purpose of the path descriptor?
+
+It represents the intended movement direction.
+
+### Q9. Why is the Hadamard gate used?
+
+To create superposition between the two possible path-descriptor values.
+
+### Q10. What is a Toffoli gate?
+
+It is a three-qubit controlled-controlled-NOT gate.
+
+### Q11. What is a CSWAP gate?
+
+It is a three-qubit controlled-SWAP gate that exchanges two target qubits when the control is 1.
+
+### Q12. What is another name for CSWAP?
+
+Fredkin gate.
+
+### Q13. What is the difference between CCX and CSWAP?
+
+CCX flips a target qubit when both control qubits are 1, whereas CSWAP exchanges two target qubits when its control is 1.
+
+### Q14. Why are two CSWAP gates required to exchange puzzle positions?
+
+Because each puzzle position is represented using two qubits. Both qubits must be exchanged to swap the complete position.
+
+### Q15. What is state preparation?
+
+It is the process of initializing qubits into the required starting states.
+
+### Q16. What is the purpose of the X gate?
+
+It flips the state of a qubit.
+
+### Q17. What is quantum superposition?
+
+It is a combination of quantum states in which a qubit can exist in multiple possible states before measurement.
+
+### Q18. What is quantum entanglement?
+
+It is a quantum correlation between two or more qubits that cannot be described independently.
+
+### Q19. What is a quantum barrier?
+
+A barrier separates circuit operations into different logical sections.
+
+### Q20. Why are 14 qubits used?
+
+Eight qubits represent the puzzle, one represents the flag, four represent trace information and one represents the path descriptor.
+
+### Q21. Why are only eight qubits measured?
+
+Because the first eight qubits contain the puzzle configuration that the program intends to display.
+
+### Q22. What is AerSimulator?
+
+It is a quantum circuit simulator provided by Qiskit Aer.
+
+### Q23. What is transpilation?
+
+It is the process of converting a quantum circuit into a backend-compatible representation.
+
+### Q24. What are shots?
+
+Shots represent the number of repeated circuit executions.
+
+### Q25. Why are 1024 shots used?
+
+To collect 1,024 measurement samples and calculate the frequency of different configurations.
+
+### Q26. What does get_counts() return?
+
+It returns a dictionary containing measurement outcomes and their frequencies.
+
+### Q27. What is the maximum number of possible configurations represented by eight measured qubits?
+
+2⁸ = 256.
+
+### Q28. What is the state space of a 2 × 2 puzzle containing four distinct elements?
+
+4! = 24 possible arrangements.
+
+### Q29. How many configurations are reachable in a standard 2 × 2 sliding puzzle from a given starting configuration?
+
+12 configurations.
+
+### Q30. What is the goal state?
+
+The goal state is the desired final arrangement that the puzzle solver attempts to reach.
+
+### Q31. What is the difference between a clockwise and counter-clockwise movement?
+
+They represent two opposite directions of movement between adjacent puzzle positions.
+
+### Q32. Why is quantum computing used in this practical?
+
+To represent puzzle states, control conditions and alternative computational paths using quantum states and quantum gates.
+
+### Q33. What is the difference between classical and quantum computing?
+
+Classical computing uses bits, whereas quantum computing uses qubits and quantum operations such as superposition and entanglement.
+
+### Q34. What is a reversible gate?
+
+A reversible gate is a gate whose input can be uniquely recovered from its output.
+
+Examples include X, CNOT and Toffoli gates.
+
+### Q35. Is a barrier a quantum gate?
+
+No. It is a circuit instruction used to separate operations.
+
+---
+
+# 29. MOST IMPORTANT QUESTIONS TO PREPARE BEFORE THE EXTERNAL
+
+| No. | Question | Key Answer |
+|---|---|---|
+| 1 | What is a 3-Puzzle? | Sliding-tile puzzle with three tiles and one empty cell |
+| 2 | What is a production system? | Rule-based problem-solving approach |
+| 3 | Components of a production system? | Rule Base, Working Memory, Control Strategy |
+| 4 | What is a production rule? | IF-THEN condition |
+| 5 | What is state preparation? | Initializing qubits |
+| 6 | Why use X gates? | To flip qubit states |
+| 7 | Why use Hadamard? | To create superposition |
+| 8 | What is a flag qubit? | Stores a control condition |
+| 9 | What is a trace qubit? | Stores intermediate condition information |
+| 10 | What is a path descriptor? | Represents a computational path or direction |
+| 11 | What is CCX? | Toffoli gate |
+| 12 | What is CSWAP? | Controlled-SWAP gate |
+| 13 | What is another name for CSWAP? | Fredkin gate |
+| 14 | Why two CSWAP gates? | To exchange two-bit puzzle positions |
+| 15 | What is a barrier? | Separates circuit stages |
+| 16 | What is measurement? | Quantum-to-classical conversion |
+| 17 | Why 14 qubits? | 8 puzzle + 1 flag + 4 trace + 1 path |
+| 18 | Why 8 classical bits? | To store puzzle measurements |
+| 19 | Why 1024 shots? | To collect 1024 samples |
+| 20 | What does get_counts() do? | Returns measurement frequencies |
+| 21 | What is the maximum outcome count? | 256 |
+| 22 | What is the state space? | All possible puzzle states |
+| 23 | What is the goal state? | Desired final puzzle arrangement |
+| 24 | What is AerSimulator? | Quantum circuit simulator |
+| 25 | What is transpilation? | Circuit conversion and optimization |
+
+---
+
+# 30. IMPORTANT TECHNICAL OBSERVATIONS ABOUT YOUR CODE
+
+These are particularly important because an external examiner may ask you to explain whether the implementation actually follows the intended 3-Puzzle rules.
+
+### 1. Empty-cell identification needs correction
+
+Your comments indicate that the empty cell is represented by `00`.
+
+However, the Toffoli gates activate when both input qubits are `1`.
+
+Therefore, the current trace logic detects `11`, not `00`.
+
+To detect `00`, the control logic must be designed differently, for example by applying X gates to the two inputs before the Toffoli operation and restoring them afterward.
+
+### 2. The flag is toggled, not simply set
+
+The Toffoli operations use q8 as a target.
+
+A Toffoli gate flips its target when both controls are 1. It does not simply assign the flag a value of 1.
+
+Therefore, repeated Toffoli operations can toggle the flag back and forth.
+
+### 3. The path descriptor does not independently select two clean movement branches
+
+The Hadamard gate puts q13 into superposition.
+
+However, the subsequent sequence of Toffoli and X gates must be designed carefully to ensure that clockwise and counter-clockwise movements are controlled by mutually exclusive conditions.
+
+The current sequence does not implement a straightforward conditional selection of the two directions.
+
+### 4. The circuit does not check whether a movement is legal
+
+A standard 3-Puzzle solver must check whether the selected tile is adjacent to the empty cell.
+
+Your circuit uses predefined swap operations, but it does not explicitly validate all legal movement conditions or check whether the goal state has been reached.
+
+### 5. The output is not necessarily a solution
+
+The program prints measured configurations.
+
+It does not calculate the shortest path, compare configurations with a goal state or verify that the generated configurations are valid puzzle solutions.
+
+**If the external asks, "Does your code solve the 3-Puzzle completely?"**
+
+A technically correct answer is:
+
+"My implementation represents puzzle configurations using qubits and uses Toffoli and controlled-SWAP gates to model conditional movement operations. It also uses a path descriptor to represent alternative movement directions. However, the current version demonstrates the circuit representation rather than a complete validated puzzle-solving algorithm. Explicit empty-cell detection, legal-move validation and goal-state checking would be needed for a complete implementation."
+
+---
+
+## 31. COMPLETE PRACTICAL EXPLANATION TO GIVE THE EXTERNAL
+
+If the examiner asks you to explain the entire practical in one answer, you can say:
+
+"My practical is based on implementing Tarrataca's Quantum Production System for the 3-Puzzle problem using Qiskit. First, I create a quantum circuit containing 14 qubits and 8 classical bits. The first eight qubits represent the puzzle configuration, one qubit is used as a flag, four qubits store trace information, and one qubit represents the path descriptor.
+
+I initialize the puzzle using Pauli-X gates and apply a Hadamard gate to the path descriptor to create superposition. Then, I use Toffoli gates to calculate trace information for the possible empty-cell positions. After that, I implement clockwise and counter-clockwise movement operations using Toffoli and controlled-SWAP gates. Finally, I measure the first eight qubits to obtain the puzzle configurations.
+
+I execute the circuit using Qiskit AerSimulator with 1024 shots. The measurement results are collected using get_counts(), and the program displays the generated configurations, their frequencies, total measurements and unique configurations."
+
+**Remember these four gate functions for the viva:**
+
+| Gate | Function |
+|---|---|
+| X | Flips a qubit |
+| H | Creates superposition |
+| CCX | Flips target when both controls are 1 |
+| CSWAP | Swaps two target qubits when control is 1 |
+
+These four gates are the most important operations in your practical.

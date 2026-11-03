@@ -1,0 +1,1424 @@
+# AIM: To Implement Quantum Error Correction Using the 3-Qubit Bit-Flip Code in Qiskit
+
+**Note:** Your program uses a 5-qubit quantum circuit to demonstrate CNOT operations, an X gate, a Toffoli (CCX) gate and measurement. It is related to bit-flip error correction concepts, but it is important to understand that the circuit, as written, is **not a complete implementation of the standard 3-qubit bit-flip error-correction protocol**. It does not explicitly perform syndrome extraction and correction of an injected bit-flip error. We will understand the actual operations in your code.
+
+# 1. INSTALLATION AND EXECUTION COMMANDS
+
+**Installation commands:**
+
+**Windows:**
+```bash
+python -m pip install qiskit qiskit-aer
+python practical_qec.py
+```
+
+**Ubuntu/Linux:**
+```bash
+pip install qiskit qiskit-aer
+python3 -m pip install qiskit qiskit-aer
+python3 practical_qec.py
+```
+
+### Important libraries:
+
+- **Qiskit:** Used to create and design quantum circuits.
+- **Qiskit Aer:** Used to simulate quantum circuits.
+- **AerSimulator:** Used to execute quantum circuits on a simulated quantum computer.
+- **Transpile:** Converts a quantum circuit into a format suitable for the selected simulator or quantum hardware.
+
+---
+
+# 2. IMPORTING LIBRARIES
+
+### `from qiskit import QuantumCircuit, transpile`
+
+This statement imports two components from Qiskit.
+
+**1. QuantumCircuit**
+
+- Used to create a quantum circuit.
+- Allows us to add qubits, classical bits and quantum gates.
+- It represents the complete quantum operation.
+
+**2. transpile**
+
+- Used to optimize and convert a quantum circuit into a format supported by the backend.
+- It prepares the circuit for execution on the simulator or quantum hardware.
+
+**Possible Viva Questions:**
+
+**Q1. What is Qiskit?**  
+Qiskit is an open-source Python framework used for quantum computing.
+
+**Q2. What is QuantumCircuit?**  
+It is a class used to create quantum circuits containing qubits, gates and measurements.
+
+**Q3. What is transpile?**  
+Transpile converts a quantum circuit into an optimized format suitable for a particular backend.
+
+**Q4. Why is transpilation required?**  
+Different quantum devices and simulators support different gate sets. Transpilation converts the circuit into compatible operations.
+
+### `from qiskit_aer import AerSimulator`
+
+- Imports AerSimulator from Qiskit Aer.
+- Qiskit Aer is a high-performance quantum circuit simulation package.
+- AerSimulator simulates the execution of quantum circuits.
+- It allows us to test quantum algorithms without requiring a physical quantum computer.
+
+**Possible Viva Questions:**
+
+**Q1. What is Qiskit Aer?**  
+It is a simulator framework used to simulate quantum circuits.
+
+**Q2. What is AerSimulator?**  
+It is a simulator backend used to execute quantum circuits and obtain measurement results.
+
+**Q3. Do we need a real quantum computer for this practical?**  
+No. We use AerSimulator to execute the circuit on a classical computer.
+
+---
+
+# 3. CREATING THE QUANTUM CIRCUIT
+
+### `qc = QuantumCircuit(5, 5)`
+
+- Creates a quantum circuit.
+- The first argument, 5, represents the number of qubits.
+- The second argument, 5, represents the number of classical bits.
+- Therefore, the circuit contains:
+  - 5 quantum bits.
+  - 5 classical bits.
+- The circuit is stored in the variable `qc`.
+
+**Possible Viva Questions:**
+
+**Q1. What is a qubit?**  
+A qubit is the basic unit of quantum information. It can exist in a superposition of |0⟩ and |1⟩.
+
+**Q2. What is a classical bit?**  
+A classical bit is the basic unit of classical information. It stores either 0 or 1.
+
+**Q3. Why are 5 qubits used?**  
+The circuit uses five qubits to perform the specified quantum operations and measurements.
+
+**Q4. Why do we need classical bits?**  
+Classical bits store the measurement results obtained from the quantum circuit.
+
+**Q5. What is the difference between QuantumCircuit(5) and QuantumCircuit(5,5)?**
+
+- QuantumCircuit(5): Creates five qubits without explicitly creating classical bits.
+- QuantumCircuit(5,5): Creates five qubits and five classical bits.
+
+---
+
+# 4. APPLYING THE RY ROTATION GATE
+
+### `qc.ry(1.0, 0)`
+
+- Applies an RY rotation gate to qubit 0.
+- RY is a single-qubit quantum rotation gate.
+- It rotates the quantum state around the Y-axis of the Bloch sphere.
+- The first argument, 1.0, represents the rotation angle in radians.
+- The second argument, 0, represents the qubit index.
+
+**Mathematical representation:**
+
+The RY gate is represented by:
+
+RY(θ) =
+
+| cos(θ/2)  -sin(θ/2) |  
+| sin(θ/2)   cos(θ/2) |
+
+Here:
+
+θ = 1.0 radian.
+
+The initial state of qubit 0 is |0⟩.
+
+After applying RY(1.0):
+
+|ψ⟩ = cos(0.5)|0⟩ + sin(0.5)|1⟩
+
+Approximately:
+
+|ψ⟩ = 0.8776|0⟩ + 0.4794|1⟩
+
+Therefore:
+
+- Probability of measuring 0 ≈ 77.02%.
+- Probability of measuring 1 ≈ 22.98%.
+
+**Possible Viva Questions:**
+
+**Q1. What is an RY gate?**  
+RY is a single-qubit rotation gate that rotates the qubit state around the Y-axis of the Bloch sphere.
+
+**Q2. What does 1.0 represent in this statement?**  
+It represents the rotation angle in radians.
+
+**Q3. What is a Bloch sphere?**  
+A Bloch sphere is a geometrical representation of the state of a single qubit.
+
+**Q4. What is the difference between H and RY gates?**
+
+- H gate creates equal superposition when applied to |0⟩.
+- RY gate rotates a qubit around the Y-axis by a specified angle.
+
+**Q5. What is the probability of measuring 0 after RY(1.0)?**
+
+Approximately 77.02%.
+
+**Q6. What is the probability of measuring 1 after RY(1.0)?**
+
+Approximately 22.98%.
+
+---
+
+# 5. APPLYING THE FIRST CNOT GATE
+
+### `qc.cx(0, 1)`
+
+- Applies a CNOT gate.
+- CNOT stands for Controlled-NOT.
+- The first argument, 0, is the control qubit.
+- The second argument, 1, is the target qubit.
+- If the control qubit is 1, the target qubit is flipped.
+- If the control qubit is 0, the target qubit remains unchanged.
+
+**Truth Table:**
+
+| Control Qubit | Target Qubit | Output |
+|---|---|---|
+| 0 | 0 | 00 |
+| 0 | 1 | 01 |
+| 1 | 0 | 11 |
+| 1 | 1 | 10 |
+
+**Possible Viva Questions:**
+
+**Q1. What is a CNOT gate?**  
+CNOT is a two-qubit controlled quantum gate that flips the target qubit when the control qubit is 1.
+
+**Q2. How many qubits are required for CNOT?**  
+Two qubits: one control and one target.
+
+**Q3. What happens if the control qubit is 0?**  
+The target qubit remains unchanged.
+
+**Q4. What happens if the control qubit is 1?**  
+The target qubit is flipped.
+
+**Q5. Is CNOT reversible?**  
+Yes. Applying CNOT twice restores the original state.
+
+---
+
+# 6. APPLYING THE SECOND CNOT GATE
+
+### `qc.cx(0, 2)`
+
+- Applies another CNOT gate.
+- Qubit 0 acts as the control qubit.
+- Qubit 2 acts as the target qubit.
+- If qubit 0 is 1, qubit 2 is flipped.
+- If qubit 0 is 0, qubit 2 remains unchanged.
+
+**Understanding both CNOT operations:**
+
+The previous two statements use qubit 0 as a common control.
+
+- First CNOT: Control = qubit 0, Target = qubit 1.
+- Second CNOT: Control = qubit 0, Target = qubit 2.
+
+This creates correlations between the three qubits.
+
+If qubit 0 were in the state |1⟩, both target qubits would be flipped from |0⟩ to |1⟩.
+
+**Possible Viva Questions:**
+
+**Q1. Why is qubit 0 used as the control in both operations?**  
+To transfer its computational-basis information to qubits 1 and 2.
+
+**Q2. What is the purpose of using multiple CNOT gates?**  
+To create correlations between qubits.
+
+**Q3. Can CNOT create entanglement?**  
+Yes. When the control qubit is in superposition and the target is appropriately initialized, CNOT can create entanglement.
+
+---
+
+# 7. APPLYING THE PAULI-X GATE
+
+### `qc.x(1)`
+
+- Applies the Pauli-X gate to qubit 1.
+- X is also called the quantum NOT gate.
+- It flips the state of the qubit.
+- If the qubit is |0⟩, it becomes |1⟩.
+- If the qubit is |1⟩, it becomes |0⟩.
+
+**Mathematical representation:**
+
+X =
+
+| 0  1 |  
+| 1  0 |
+
+Transformations:
+
+X|0⟩ = |1⟩
+
+X|1⟩ = |0⟩
+
+**Importance in this practical:**
+
+The X gate represents a bit-flip operation.
+
+A bit-flip error changes:
+
+0 → 1
+
+or
+
+1 → 0
+
+However, in your code, this X gate is deliberately applied as a quantum operation. It is not a simulated random hardware error.
+
+**Possible Viva Questions:**
+
+**Q1. What is an X gate?**  
+It is a single-qubit quantum gate that flips the state of a qubit.
+
+**Q2. Why is the X gate called a NOT gate?**  
+Because it performs the same logical operation as a classical NOT gate on computational-basis states.
+
+**Q3. What is a bit-flip error?**  
+A bit-flip error occurs when a qubit changes from 0 to 1 or from 1 to 0.
+
+**Q4. Is the X gate an error?**  
+No. It is a valid quantum gate. It can represent an intentional bit-flip operation or be used to model a bit-flip error.
+
+**Q5. What happens if we apply X twice?**  
+The original state is restored because X² = I.
+
+---
+
+# 8. APPLYING THE THIRD CNOT GATE
+
+### `qc.cx(0, 3)`
+
+- Applies a CNOT gate between qubits 0 and 3.
+- Qubit 0 is the control.
+- Qubit 3 is the target.
+- If qubit 0 is 1, qubit 3 is flipped.
+- Otherwise, qubit 3 remains unchanged.
+
+**Purpose:**
+
+This operation creates a correlation between qubit 0 and qubit 3.
+
+**Possible Viva Questions:**
+
+**Q1. Which qubit acts as the control?**  
+Qubit 0.
+
+**Q2. Which qubit acts as the target?**  
+Qubit 3.
+
+**Q3. What is the function of this CNOT operation?**  
+It flips qubit 3 when qubit 0 is in state 1.
+
+---
+
+# 9. APPLYING THE FOURTH CNOT GATE
+
+### `qc.cx(1, 3)`
+
+- Applies a CNOT gate between qubits 1 and 3.
+- Qubit 1 acts as the control.
+- Qubit 3 acts as the target.
+- If qubit 1 is 1, qubit 3 is flipped.
+- Otherwise, qubit 3 remains unchanged.
+
+**Important concept:**
+
+Qubit 3 is now the target of two CNOT gates:
+
+1. Control = qubit 0.
+2. Control = qubit 1.
+
+Therefore, its final computational-basis value depends on both control qubits.
+
+In binary arithmetic, its value is:
+
+q3 = q0 XOR q1
+
+Here, XOR stands for Exclusive OR.
+
+**XOR Truth Table:**
+
+| A | B | A XOR B |
+|---|---|---|
+| 0 | 0 | 0 |
+| 0 | 1 | 1 |
+| 1 | 0 | 1 |
+| 1 | 1 | 0 |
+
+**Possible Viva Questions:**
+
+**Q1. What is XOR?**  
+XOR is a logical operation that produces 1 when the two inputs are different.
+
+**Q2. What is the output of 0 XOR 0?**  
+0.
+
+**Q3. What is the output of 1 XOR 0?**  
+1.
+
+**Q4. Why is qubit 3 connected to two control qubits?**  
+To make its value depend on the combined XOR of qubits 0 and 1.
+
+---
+
+# 10. APPLYING THE FIFTH CNOT GATE
+
+### `qc.cx(1, 4)`
+
+- Applies a CNOT gate.
+- Qubit 1 acts as the control.
+- Qubit 4 acts as the target.
+- If qubit 1 is 1, qubit 4 is flipped.
+- Otherwise, qubit 4 remains unchanged.
+
+**Possible Viva Questions:**
+
+**Q1. What is the control qubit?**  
+Qubit 1.
+
+**Q2. What is the target qubit?**  
+Qubit 4.
+
+**Q3. What is the purpose of this operation?**  
+It creates a correlation between qubits 1 and 4.
+
+---
+
+# 11. APPLYING THE SIXTH CNOT GATE
+
+### `qc.cx(2, 4)`
+
+- Applies another CNOT gate.
+- Qubit 2 acts as the control.
+- Qubit 4 acts as the target.
+- If qubit 2 is 1, qubit 4 is flipped.
+
+**Important concept:**
+
+Qubit 4 is the target of two CNOT gates:
+
+1. Control = qubit 1.
+2. Control = qubit 2.
+
+Therefore:
+
+q4 = q1 XOR q2
+
+**Possible Viva Questions:**
+
+**Q1. What is the final value of qubit 4?**  
+In computational-basis terms, it is the XOR of qubits 1 and 2.
+
+**Q2. How many CNOT gates are used in the complete circuit?**  
+Six.
+
+**Q3. What is the purpose of CNOT gates in quantum circuits?**  
+They perform controlled operations and can establish correlations or entanglement between qubits.
+
+---
+
+# 12. APPLYING THE TOFFOLI GATE (CCX)
+
+### `qc.ccx(3, 4, 1)`
+
+- Applies a CCX gate, also called the Toffoli gate.
+- It is a three-qubit quantum gate.
+- The first two arguments are control qubits.
+- The third argument is the target qubit.
+
+Here:
+
+- Control qubit 1 = qubit 3.
+- Control qubit 2 = qubit 4.
+- Target qubit = qubit 1.
+
+**Working:**
+
+The target qubit is flipped only when both control qubits are 1.
+
+| Qubit 3 | Qubit 4 | Qubit 1 |
+|---|---|---|
+| 0 | 0 | No flip |
+| 0 | 1 | No flip |
+| 1 | 0 | No flip |
+| 1 | 1 | Flip |
+
+**Mathematical representation:**
+
+Target output = Target input XOR (Control 1 AND Control 2)
+
+**Importance:**
+
+The Toffoli gate performs a controlled-controlled-NOT operation.
+
+It is also used in reversible computing and quantum arithmetic.
+
+**Possible Viva Questions:**
+
+**Q1. What is a Toffoli gate?**  
+A Toffoli gate is a three-qubit controlled-controlled-NOT gate.
+
+**Q2. How many qubits are required for a Toffoli gate?**  
+Three qubits.
+
+**Q3. When does the Toffoli gate flip its target?**  
+Only when both control qubits are 1.
+
+**Q4. What is CCX?**  
+CCX stands for Controlled-Controlled-X.
+
+**Q5. What is the difference between CNOT and Toffoli?**
+
+| CNOT | Toffoli |
+|---|---|
+| Requires 2 qubits. | Requires 3 qubits. |
+| Has 1 control qubit. | Has 2 control qubits. |
+| Flips target when control is 1. | Flips target when both controls are 1. |
+
+**Q6. Is the Toffoli gate reversible?**  
+Yes. It is a reversible quantum gate.
+
+---
+
+# 13. MEASURING ALL QUBITS
+
+### `qc.measure(range(5), range(5))`
+
+- Measures all five qubits.
+- Stores their measurement results in five classical bits.
+- `range(5)` generates indices from 0 to 4.
+- The first range represents the quantum bits.
+- The second range represents the classical bits.
+
+The mapping is:
+
+| Quantum Qubit | Classical Bit |
+|---|---|
+| q0 | c0 |
+| q1 | c1 |
+| q2 | c2 |
+| q3 | c3 |
+| q4 | c4 |
+
+After measurement, the quantum results are converted into classical binary values.
+
+**Possible Viva Questions:**
+
+**Q1. What is the purpose of measurement?**  
+To convert quantum information into classical information.
+
+**Q2. Why are five classical bits required?**  
+To store the measurement results of all five qubits.
+
+**Q3. What does range(5) represent?**  
+It generates the indices 0, 1, 2, 3 and 4.
+
+**Q4. What happens after measurement?**  
+Each qubit produces a definite measurement outcome of either 0 or 1.
+
+---
+
+# 14. PRINTING THE PRACTICAL TITLE
+
+### `print("Quantum Error Correction using Bit-Flip Code")`
+
+- Displays the title of the practical.
+- It indicates that the circuit is intended to demonstrate quantum error-correction-related operations using bit-flip concepts.
+
+### `print(qc.draw())`
+
+- Displays the quantum circuit diagram.
+- `qc.draw()` generates a graphical/text representation of the circuit.
+- It shows the qubits, quantum gates and measurement operations.
+
+**Possible Viva Questions:**
+
+**Q1. What does qc.draw() do?**  
+It displays the quantum circuit.
+
+**Q2. What does the symbol X represent?**  
+The Pauli-X or bit-flip gate.
+
+**Q3. What does CX represent?**  
+A controlled-NOT gate.
+
+**Q4. What does CCX represent?**  
+A controlled-controlled-NOT or Toffoli gate.
+
+---
+
+# 15. CREATING THE SIMULATOR
+
+### `simulator = AerSimulator()`
+
+- Creates an object of AerSimulator.
+- It provides a simulated quantum backend.
+- It allows the circuit to be executed using classical computing resources.
+- The simulator object is stored in the variable `simulator`.
+
+**Possible Viva Questions:**
+
+**Q1. What is a backend in Qiskit?**  
+A backend is the execution environment where a quantum circuit is run.
+
+**Q2. What is AerSimulator?**  
+It is a quantum circuit simulator provided by Qiskit Aer.
+
+**Q3. Is AerSimulator a real quantum computer?**  
+No. It is a classical simulation of quantum circuit behaviour.
+
+---
+
+# 16. TRANSPILING THE QUANTUM CIRCUIT
+
+### `compiled_circuit = transpile(qc, simulator)`
+
+- Converts the original quantum circuit into a format suitable for the selected simulator.
+- `qc` represents the original quantum circuit.
+- `simulator` represents the target backend.
+- The converted circuit is stored in `compiled_circuit`.
+
+**Possible Viva Questions:**
+
+**Q1. What is transpilation?**  
+Transpilation is the process of converting a quantum circuit into a form supported by a target backend.
+
+**Q2. Why do we use transpile()?**  
+To ensure that the circuit is compatible with the simulator or quantum hardware.
+
+**Q3. Does transpilation change the expected quantum computation?**  
+It is intended to preserve the circuit's logical behaviour while changing its implementation.
+
+---
+
+# 17. EXECUTING THE QUANTUM CIRCUIT
+
+### `job = simulator.run(compiled_circuit, shots=1024)`
+
+- Executes the transpiled quantum circuit on AerSimulator.
+- `compiled_circuit` is the circuit to be executed.
+- `shots=1024` specifies that the circuit will be executed 1,024 times.
+- The execution task is stored in the variable `job`.
+
+**What are shots?**
+
+Shots represent the number of times a quantum circuit is executed to collect measurement outcomes.
+
+Here:
+
+Shots = 1024.
+
+Therefore, the simulator performs 1,024 circuit executions.
+
+**Possible Viva Questions:**
+
+**Q1. What are shots in quantum computing?**  
+Shots represent the number of repeated circuit executions used to collect measurement results.
+
+**Q2. Why are 1,024 shots used?**  
+To collect a larger number of measurement outcomes and study their frequencies.
+
+**Q3. What happens if shots are increased?**  
+More measurement samples are collected, generally providing a better estimate of the outcome probabilities.
+
+**Q4. Will all 1,024 results necessarily be different?**  
+No. Some outcomes may repeat.
+
+---
+
+# 18. RETRIEVING THE EXECUTION RESULT
+
+### `result = job.result()`
+
+- Retrieves the execution results.
+- The results contain the measurement outcomes obtained from the simulator.
+- The result is stored in the variable `result`.
+
+**Possible Viva Questions:**
+
+**Q1. What does job.result() do?**  
+It retrieves the completed execution results.
+
+**Q2. What does the result contain?**  
+It contains the measurement data collected from the circuit executions.
+
+---
+
+# 19. EXTRACTING THE MEASUREMENT COUNTS
+
+### `counts = result.get_counts()`
+
+- Extracts the measurement results from the simulator.
+- The output is returned as a Python dictionary.
+- Each dictionary key represents a measured binary state.
+- Each dictionary value represents the frequency of that state.
+
+**Example:**
+
+```text
+{'00000': 200, '00001': 300, '10100': 524}
+```
+
+This is only an illustrative example, not the expected output of your particular circuit.
+
+Here:
+
+- `00000` occurred 200 times.
+- `00001` occurred 300 times.
+- `10100` occurred 524 times.
+
+**Possible Viva Questions:**
+
+**Q1. What is get_counts()?**  
+It retrieves the measurement outcomes and their frequencies.
+
+**Q2. What is a dictionary?**  
+A dictionary is a Python data structure that stores key-value pairs.
+
+**Q3. What does the key represent?**  
+The measured binary state.
+
+**Q4. What does the value represent?**  
+The number of times that state occurred.
+
+---
+
+# 20. DISPLAYING THE MEASUREMENT RESULTS
+
+### `print("\nMeasurement Results:")`
+
+- Displays the heading Measurement Results.
+- `\n` creates a new line before printing the heading.
+
+### `for state, frequency in sorted(counts.items()):`
+
+- Creates a for loop to display all measurement outcomes.
+- `counts.items()` returns key-value pairs from the dictionary.
+- `sorted()` arranges the measurement outcomes in sorted order.
+- `state` stores the binary measurement result.
+- `frequency` stores the number of times that result occurred.
+
+### `print(state, ":", frequency)`
+
+- Displays each binary state and its frequency.
+- The colon separates the state from its occurrence count.
+
+**Example:**
+
+```text
+00000 : 200
+00001 : 300
+10100 : 524
+```
+
+**Possible Viva Questions:**
+
+**Q1. What does items() do?**  
+It returns the key-value pairs of a dictionary.
+
+**Q2. Why is sorted() used?**  
+To display measurement outcomes in sorted order.
+
+**Q3. What does state represent?**  
+The measured binary result.
+
+**Q4. What does frequency represent?**  
+The number of times a particular result occurred.
+
+---
+
+# 21. CALCULATING TOTAL MEASUREMENTS
+
+### `print("\nTotal Measurements:", sum(counts.values()))`
+
+- Displays the total number of measurement outcomes.
+- `counts.values()` returns the frequency values from the dictionary.
+- `sum()` adds all the frequencies.
+- Since shots = 1024, the total measurement count should be 1024.
+
+**Example:**
+
+Suppose:
+
+- 00000 occurred 200 times.
+- 00001 occurred 300 times.
+- 10100 occurred 524 times.
+
+Total:
+
+200 + 300 + 524 = 1024.
+
+**Possible Viva Questions:**
+
+**Q1. What does values() do?**  
+It retrieves all dictionary values.
+
+**Q2. What does sum() do?**  
+It adds all the numerical values.
+
+**Q3. What should the total measurements be?**  
+1024, because the circuit is executed for 1024 shots.
+
+---
+
+# 22. COUNTING UNIQUE MEASUREMENT RESULTS
+
+### `print("Unique Measurement Results:", len(counts))`
+
+- Displays the number of distinct measurement outcomes.
+- `len()` calculates the number of elements in the dictionary.
+- Each dictionary key represents one unique binary outcome.
+- Therefore, `len(counts)` gives the number of different outcomes observed.
+
+**Example:**
+
+Suppose:
+
+```text
+{'00000': 200, '00001': 300, '10100': 524}
+```
+
+There are three different measurement outcomes.
+
+Therefore:
+
+Unique Measurement Results = 3.
+
+**Possible Viva Questions:**
+
+**Q1. What does len() do?**  
+It returns the number of elements in a collection.
+
+**Q2. What are unique measurement results?**  
+They represent the distinct binary outcomes observed during circuit execution.
+
+**Q3. Can the number of unique outcomes be greater than the number of shots?**  
+No. The number of unique outcomes cannot exceed the number of shots.
+
+**Q4. What is the maximum possible number of unique outcomes for five measured qubits?**
+
+2⁵ = 32.
+
+---
+
+# 23. UNDERSTANDING THE COMPLETE OUTPUT
+
+The exact measurement frequencies depend on the simulator's execution.
+
+For your circuit, we can calculate the expected measurement probabilities.
+
+The initial state is:
+
+- q0 = 0
+- q1 = 0
+- q2 = 0
+- q3 = 0
+- q4 = 0
+
+After RY(1.0), qubit 0 has the state:
+
+0.8776|0⟩ + 0.4794|1⟩
+
+The subsequent CNOT operations and X gate produce the following computational-basis outcomes.
+
+### Step 1: When qubit 0 is measured as 0
+
+The resulting state before the Toffoli operation is:
+
+|01000⟩
+
+The Toffoli gate does not flip qubit 1 because q3 = 0 and q4 = 0.
+
+Final state:
+
+**01000**
+
+### Step 2: When qubit 0 is measured as 1
+
+The resulting state before the Toffoli operation is:
+
+|11111⟩
+
+Both control qubits of the Toffoli gate are 1.
+
+Therefore, the Toffoli gate flips qubit 1.
+
+Final state:
+
+**10111**
+
+Thus, the two possible measurement outcomes are:
+
+- 01000
+- 10111
+
+**Important:** Qiskit displays measurement strings with the highest-index classical bit on the left. Since the circuit maps q0 → c0, q1 → c1, and so on, the displayed strings are written in reverse qubit-index order.
+
+### Expected output format
+
+```text
+Quantum Error Correction using Bit-Flip Code
+
+Measurement Results:
+01000 : approximately 789
+10111 : approximately 235
+
+Total Measurements: 1024
+Unique Measurement Results: 2
+```
+
+The frequencies above are illustrative approximations.
+
+The theoretical probabilities are:
+
+For 01000:
+
+P(01000) = cos²(0.5)
+
+≈ 0.7702
+
+For 10111:
+
+P(10111) = sin²(0.5)
+
+≈ 0.2298
+
+Expected frequencies:
+
+- 01000: 1024 × 0.7702 ≈ 789
+- 10111: 1024 × 0.2298 ≈ 235
+
+Actual simulator frequencies may differ slightly due to sampling variation.
+
+### Understanding each output
+
+| Output | Explanation |
+|---|---|
+| Quantum Error Correction using Bit-Flip Code | Displays the practical title. |
+| Quantum circuit diagram | Shows all five qubits and the gates applied to them. |
+| Measurement Results | Displays the different binary outcomes. |
+| 01000 | One possible measured state. |
+| 10111 | Another possible measured state. |
+| Frequency | Number of times a particular outcome occurred. |
+| Total Measurements: 1024 | Total number of circuit executions. |
+| Unique Measurement Results: 2 | Two distinct outcomes were observed. |
+
+---
+
+# 24. IMPORTANT CONCEPTS RELATED TO THE AIM
+
+## 1. What is Quantum Error Correction (QEC)?
+
+Quantum Error Correction is a technique used to protect quantum information from errors caused by noise and unwanted interactions with the environment.
+
+Quantum systems are sensitive to external disturbances, which can change the state of qubits.
+
+QEC uses additional qubits and specially designed operations to detect and correct errors without directly measuring the encoded quantum information.
+
+**Why is QEC required?**
+
+- Quantum computers are sensitive to noise.
+- Qubits can lose their quantum information.
+- Quantum gates may introduce errors.
+- Measurement operations may also be imperfect.
+
+QEC improves the reliability of quantum computation.
+
+## 2. What is a Bit-Flip Error?
+
+A bit-flip error occurs when a qubit changes its state from 0 to 1 or from 1 to 0.
+
+Example:
+
+Before error:
+
+|0⟩
+
+After error:
+
+|1⟩
+
+Mathematically, a bit-flip error is represented by the Pauli-X operator.
+
+X|0⟩ = |1⟩
+
+X|1⟩ = |0⟩
+
+**Example:**
+
+If a qubit stores the information 0 and an error changes it to 1, the original information is corrupted.
+
+The bit-flip code is designed to detect and correct this type of error.
+
+## 3. What is the 3-Qubit Bit-Flip Code?
+
+The 3-qubit bit-flip code is a basic quantum error-correction technique.
+
+It uses three physical qubits to encode one logical qubit.
+
+The encoding is:
+
+Logical |0⟩:
+
+|0⟩ → |000⟩
+
+Logical |1⟩:
+
+|1⟩ → |111⟩
+
+For a general quantum state:
+
+|ψ⟩ = α|0⟩ + β|1⟩
+
+The encoded state becomes:
+
+|ψL⟩ = α|000⟩ + β|111⟩
+
+This encoding allows us to detect and correct a single bit-flip error.
+
+**Example:**
+
+Suppose the encoded state is:
+
+|000⟩
+
+If the second qubit flips, the state becomes:
+
+|010⟩
+
+The error can be detected using parity checks and corrected by flipping the second qubit again.
+
+## 4. What is Encoding?
+
+Encoding is the process of representing one logical qubit using multiple physical qubits.
+
+In the 3-qubit bit-flip code:
+
+- One logical qubit is represented using three physical qubits.
+- Logical 0 becomes 000.
+- Logical 1 becomes 111.
+
+The purpose is to add redundancy so that errors can be detected and corrected.
+
+## 5. What is Decoding?
+
+Decoding is the process of recovering the original logical information from the encoded quantum information.
+
+In quantum error correction, decoding involves interpreting the error syndrome and applying the appropriate correction.
+
+## 6. What is a Logical Qubit?
+
+A logical qubit is a qubit encoded across multiple physical qubits.
+
+It is used to protect quantum information against physical errors.
+
+**Difference:**
+
+| Physical Qubit | Logical Qubit |
+|---|---|
+| Actual qubit in hardware. | Encoded representation of quantum information. |
+| Can be affected by noise. | Uses multiple physical qubits for error protection. |
+| Basic hardware unit. | Error-protected information unit. |
+
+## 7. What is a Physical Qubit?
+
+A physical qubit is an actual quantum system used to store and process quantum information.
+
+Examples include:
+
+- Superconducting circuits.
+- Trapped ions.
+- Photons.
+- Neutral atoms.
+
+## 8. What is a Syndrome?
+
+A syndrome is a set of measurement results used to identify the type and location of an error.
+
+In the 3-qubit bit-flip code, syndrome extraction uses two parity checks.
+
+The stabilizers are:
+
+S1 = Z₀Z₁
+
+S2 = Z₁Z₂
+
+Here, Z represents the Pauli-Z operator.
+
+**Syndrome Table:**
+
+| Error | S1 | S2 |
+|---|---|---|
+| No error | +1 | +1 |
+| Error on qubit 0 | -1 | +1 |
+| Error on qubit 1 | -1 | -1 |
+| Error on qubit 2 | +1 | -1 |
+
+The syndrome identifies which qubit has experienced a bit-flip error.
+
+**Important:** Your current code does not explicitly perform these syndrome measurements.
+
+## 9. What is the Pauli-X Gate?
+
+The Pauli-X gate is a single-qubit gate that flips the state of a qubit.
+
+It is represented by:
+
+X =
+
+| 0  1 |  
+| 1  0 |
+
+Its operations are:
+
+X|0⟩ = |1⟩
+
+X|1⟩ = |0⟩
+
+It is also called the quantum NOT gate.
+
+## 10. What is the Pauli-Z Gate?
+
+The Pauli-Z gate changes the phase of a qubit.
+
+Its matrix is:
+
+Z =
+
+| 1  0 |  
+| 0 -1 |
+
+Its operations are:
+
+Z|0⟩ = |0⟩
+
+Z|1⟩ = -|1⟩
+
+It is associated with phase-flip errors.
+
+## 11. What is the Bit-Flip Code?
+
+The bit-flip code is a quantum error-correction code that protects quantum information against single-qubit bit-flip errors.
+
+It uses three physical qubits to encode one logical qubit.
+
+It can correct one bit-flip error among the three physical qubits.
+
+## 12. What is a Phase-Flip Error?
+
+A phase-flip error changes the relative phase of a quantum state.
+
+It is represented by the Pauli-Z operator.
+
+For example:
+
+|+⟩ = (|0⟩ + |1⟩)/√2
+
+After a phase-flip error:
+
+Z|+⟩ = (|0⟩ - |1⟩)/√2
+
+The phase of the |1⟩ component changes.
+
+## 13. What is the Difference Between Bit-Flip and Phase-Flip Errors?
+
+| Bit-Flip Error | Phase-Flip Error |
+|---|---|
+| Changes 0 to 1 or 1 to 0. | Changes the relative phase of a quantum state. |
+| Represented by X gate. | Represented by Z gate. |
+| Affects computational-basis information. | Affects phase information. |
+| Corrected using bit-flip code. | Corrected using phase-flip code. |
+
+## 14. What is a CNOT Gate?
+
+CNOT stands for Controlled-NOT.
+
+It is a two-qubit gate consisting of:
+
+- One control qubit.
+- One target qubit.
+
+The target flips only when the control is 1.
+
+It is commonly used in quantum error-correction encoding circuits.
+
+## 15. What is a Toffoli Gate?
+
+A Toffoli gate is a three-qubit controlled-controlled-NOT gate.
+
+It has:
+
+- Two control qubits.
+- One target qubit.
+
+The target flips only when both control qubits are 1.
+
+It is useful in reversible computation and quantum arithmetic.
+
+## 16. What is Quantum Noise?
+
+Quantum noise refers to unwanted disturbances that affect the state of qubits.
+
+Sources include:
+
+- Environmental interactions.
+- Imperfect quantum gates.
+- Decoherence.
+- Measurement errors.
+- Control errors.
+
+Quantum error correction helps protect quantum information against such errors.
+
+## 17. What is Decoherence?
+
+Decoherence is the loss of quantum coherence due to interactions between a quantum system and its environment.
+
+It can destroy superposition and entanglement.
+
+It is one of the major challenges in building reliable quantum computers.
+
+## 18. What is Quantum Entanglement?
+
+Quantum entanglement is a phenomenon in which multiple qubits share a joint quantum state and exhibit correlations that cannot be described as independent states.
+
+It is important in quantum computing, quantum communication and quantum error correction.
+
+## 19. What is a Quantum Simulator?
+
+A quantum simulator is a software-based system that models the behaviour of quantum circuits.
+
+In this practical, AerSimulator is used to execute the circuit and obtain measurement results.
+
+## 20. Applications of Quantum Error Correction
+
+1. **Quantum Computing:** Improves the reliability of quantum computations.
+2. **Quantum Communication:** Helps protect quantum information during transmission.
+3. **Quantum Cryptography:** Supports reliable quantum information processing.
+4. **Quantum Research:** Helps researchers study and manage quantum noise.
+5. **Fault-Tolerant Quantum Computing:** Provides the foundation for reliable large-scale quantum computation.
+
+---
+
+# 25. IMPORTANT AIM-BASED VIVA QUESTIONS WITH ANSWERS
+
+### Q1. What is the main aim of this practical?
+
+The aim is to implement a quantum circuit using Qiskit to understand bit-flip operations, controlled gates and quantum measurement in the context of quantum error correction.
+
+### Q2. What is Quantum Error Correction?
+
+Quantum Error Correction is a technique used to detect and correct errors in quantum information.
+
+### Q3. What is a bit-flip error?
+
+A bit-flip error changes a qubit from 0 to 1 or from 1 to 0.
+
+### Q4. Which gate represents a bit-flip operation?
+
+Pauli-X gate.
+
+### Q5. What is the 3-qubit bit-flip code?
+
+It is a quantum error-correction code that uses three physical qubits to encode one logical qubit and correct a single bit-flip error.
+
+### Q6. How many physical qubits are needed for the 3-qubit bit-flip code?
+
+Three physical qubits.
+
+### Q7. How many logical qubits are encoded?
+
+One logical qubit.
+
+### Q8. What is the purpose of encoding?
+
+To introduce redundancy so that quantum errors can be detected and corrected.
+
+### Q9. What is the purpose of decoding?
+
+To recover the original logical information from the encoded information.
+
+### Q10. What is a syndrome?
+
+A syndrome is a set of measurement results used to identify the type and location of an error.
+
+### Q11. What is the role of CNOT?
+
+CNOT performs a controlled-NOT operation and can establish correlations between qubits.
+
+### Q12. What is the role of the Toffoli gate?
+
+It flips the target qubit only when both control qubits are 1.
+
+### Q13. What is the difference between CNOT and CCX?
+
+CNOT has one control qubit and one target qubit, whereas CCX has two control qubits and one target qubit.
+
+### Q14. What is the purpose of the RY gate?
+
+It rotates the qubit state around the Y-axis of the Bloch sphere.
+
+### Q15. What is the purpose of the X gate?
+
+It flips the state of a qubit.
+
+### Q16. What is the difference between X and Z gates?
+
+X performs a bit flip, whereas Z performs a phase flip.
+
+### Q17. What is a phase-flip error?
+
+A phase-flip error changes the relative phase of a quantum state.
+
+### Q18. What is quantum noise?
+
+Quantum noise refers to unwanted disturbances that affect quantum states and operations.
+
+### Q19. What is decoherence?
+
+Decoherence is the loss of quantum coherence due to interactions with the environment.
+
+### Q20. What is a logical qubit?
+
+A logical qubit is an encoded qubit represented using multiple physical qubits.
+
+### Q21. What is AerSimulator?
+
+AerSimulator is a Qiskit Aer backend used to simulate quantum circuits.
+
+### Q22. Why do we use transpile?
+
+To convert the quantum circuit into a format supported by the selected backend.
+
+### Q23. What are shots?
+
+Shots represent the number of times a circuit is executed to collect measurement outcomes.
+
+### Q24. Why are 1024 shots used?
+
+To collect 1,024 measurement samples and calculate the frequency of each outcome.
+
+### Q25. What does get_counts() return?
+
+It returns a dictionary containing measurement outcomes and their frequencies.
+
+### Q26. What does len(counts) represent?
+
+It represents the number of unique measurement outcomes observed.
+
+### Q27. What is the maximum number of possible outcomes for five qubits?
+
+2⁵ = 32.
+
+### Q28. What is the difference between quantum and classical bits?
+
+A classical bit stores either 0 or 1, whereas a qubit can exist in a superposition of both states.
+
+### Q29. Can quantum errors be corrected by simply copying a qubit?
+
+No. The no-cloning theorem prevents the perfect copying of an arbitrary unknown quantum state.
+
+### Q30. What is the no-cloning theorem?
+
+It states that an arbitrary unknown quantum state cannot be copied perfectly.
+
+### Q31. Can the 3-qubit bit-flip code correct multiple bit-flip errors?
+
+It can correct one bit-flip error. It cannot guarantee correction when two or more qubits are flipped.
+
+### Q32. What happens if two qubits experience bit-flip errors in the 3-qubit code?
+
+The majority vote can identify the wrong logical state, resulting in an incorrect correction.
+
+### Q33. Why is redundancy important in quantum error correction?
+
+Redundancy allows the system to detect errors without directly measuring and destroying the encoded quantum information.
+
+### Q34. What is fault-tolerant quantum computing?
+
+It is an approach to quantum computing in which quantum operations are designed to continue working reliably even when individual components experience errors.
+
+### Q35. Is your current circuit a complete implementation of the 3-qubit bit-flip code?
+
+No. It demonstrates quantum gates and bit-flip-related operations, but it does not implement the complete standard error-correction procedure involving encoding, syndrome extraction and conditional correction.
+
+---
+
+# 26. MOST IMPORTANT QUESTIONS TO PREPARE BEFORE THE EXTERNAL
+
+| No. | Question | Key Answer |
+|---|---|---|
+| 1 | What is QEC? | Quantum Error Correction |
+| 2 | What is a bit-flip error? | 0 changes to 1 or 1 changes to 0 |
+| 3 | Which gate represents bit flip? | Pauli-X |
+| 4 | What is a 3-qubit bit-flip code? | Three physical qubits encode one logical qubit |
+| 5 | What is encoding? | Representing logical information using multiple qubits |
+| 6 | What is decoding? | Recovering the logical information |
+| 7 | What is a syndrome? | Information used to identify errors |
+| 8 | What is CNOT? | Controlled-NOT gate |
+| 9 | What is CCX? | Toffoli gate |
+| 10 | What is RY? | Y-axis rotation gate |
+| 11 | What is a phase-flip error? | Change in relative phase |
+| 12 | Which gate represents phase flip? | Pauli-Z |
+| 13 | What is quantum noise? | Unwanted disturbances in quantum systems |
+| 14 | What is decoherence? | Loss of quantum coherence |
+| 15 | What is AerSimulator? | Quantum circuit simulator |
+| 16 | What is transpilation? | Circuit conversion and optimization |
+| 17 | What are shots? | Number of circuit executions |
+| 18 | Why 1024 shots? | To collect 1024 measurement samples |
+| 19 | What does get_counts() do? | Returns measurement frequencies |
+| 20 | What is the maximum number of outcomes for 5 qubits? | 32 |
+| 21 | What is a logical qubit? | An encoded qubit |
+| 22 | What is a physical qubit? | An actual hardware qubit |
+| 23 | What is entanglement? | Quantum correlations between qubits |
+| 24 | What is the no-cloning theorem? | Unknown quantum states cannot be perfectly copied |
+| 25 | Is this a complete QEC implementation? | No, syndrome extraction and conditional correction are missing |
+
+---
+
+# 27. IMPORTANT: UNDERSTAND THESE THREE THINGS BEFORE YOUR PRACTICAL
+
+Your external examiner may specifically ask questions about the relationship between your AIM and the actual code.
+
+**1. Why is the practical called Quantum Error Correction using Bit-Flip Code?**
+
+The bit-flip code is a basic quantum error-correction technique that protects quantum information against bit-flip errors. The X gate in your program represents the bit-flip operation.
+
+**2. Does your program actually correct a bit-flip error?**
+
+No. Your program applies an intentional X gate and performs other controlled operations. It does not explicitly detect an error using syndrome measurements or correct an injected error.
+
+**3. What is the difference between your program and the standard 3-qubit bit-flip code?**
+
+| Your Program | Standard 3-Qubit Bit-Flip Code |
+|---|---|
+| Uses 5 qubits. | Uses 3 physical data qubits. |
+| Applies RY, CNOT, X and CCX gates. | Uses encoding, syndrome extraction and correction operations. |
+| Measures all five qubits directly. | Measures error syndromes without directly measuring the encoded logical state. |
+| Does not explicitly correct an injected error. | Can correct one bit-flip error. |
+
+**A technically accurate explanation to give the examiner:**
+
+"My circuit demonstrates bit-flip-related quantum operations using RY, CNOT, Pauli-X and Toffoli gates. It executes the circuit using Qiskit AerSimulator and collects measurement statistics over 1024 shots. The Pauli-X gate represents a bit-flip operation. However, the current implementation does not perform the complete three-qubit error-correction protocol because explicit syndrome extraction and conditional error correction are not included."
+
+This distinction is important because an external examiner may ask you to identify the error syndrome and explain how the circuit corrects it.

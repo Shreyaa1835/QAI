@@ -1,0 +1,727 @@
+# Practical: Quantum Teleportation Algorithm Using Qiskit
+
+## 1. AIM
+
+To implement and simulate the **Quantum Teleportation Algorithm** using Qiskit. The circuit demonstrates how an unknown quantum state can be transferred from one qubit to another using entanglement, quantum gates, measurement, and classical conditional operations.
+
+**Important:** This code demonstrates the main operations involved in quantum teleportation, but its gate sequence and correction conditions should be examined carefully. It is not the standard textbook teleportation circuit in its usual form.
+
+## 2. CONCEPTS USED IN THE PRACTICAL
+
+### 2.1 Quantum Teleportation
+Quantum teleportation is a process of transferring an unknown quantum state from a sender's qubit to a receiver's qubit using:
+- Entanglement between two qubits.
+- Measurement of the sender's qubits.
+- Classical communication of measurement results.
+- Conditional quantum gates applied by the receiver.
+
+It transfers the **quantum state**, not the physical qubit itself.
+
+### 2.2 Qubits
+A qubit is the basic unit of quantum information. Unlike a classical bit, which is either 0 or 1, a qubit can exist in a superposition of both states.
+
+### 2.3 Quantum Entanglement
+Entanglement is a quantum phenomenon in which two or more qubits share a correlated state. Measuring one qubit affects the possible measurement outcomes of the other.
+
+### 2.4 Quantum Gates Used
+
+| Gate | Purpose |
+|---|---|
+| `RY` | Rotates a qubit around the Y-axis. |
+| `RZ` | Rotates a qubit around the Z-axis. |
+| `H` | Creates superposition or changes the measurement basis. |
+| `CX` | Flips the target qubit when the control qubit is 1. |
+| `X` | Bit-flip gate; changes 0 to 1 and 1 to 0. |
+| `Z` | Phase-flip gate; changes the phase of the \(|1\rangle\) component. |
+| `Barrier` | Separates stages of the quantum circuit. |
+| `Measure` | Converts quantum information into classical measurement results. |
+
+## 3. LINE-BY-LINE CODE EXPLANATION
+
+### A. Importing Libraries
+
+**Line 1: `from qiskit import QuantumCircuit, transpile`**
+
+- `qiskit` is a Python framework used to create and execute quantum circuits.
+- `QuantumCircuit` is used to create a quantum circuit and apply quantum gates.
+- `transpile` converts the circuit into instructions compatible with the selected simulator or quantum hardware.
+
+**Possible questions:**
+- **Q: What is Qiskit?**  
+  A: Qiskit is an open-source Python framework for quantum computing.
+- **Q: What is transpilation?**  
+  A: It is the process of converting a quantum circuit into instructions supported by a particular backend.
+
+**Line 2: `from qiskit_aer import AerSimulator`**
+
+- `qiskit_aer` provides simulators for executing quantum circuits.
+- `AerSimulator` simulates the behaviour of a quantum computer on a classical computer.
+- It allows us to test quantum circuits without requiring an actual quantum computer.
+
+**Possible question:**
+- **Q: What is AerSimulator?**  
+  A: It is a Qiskit simulator used to execute quantum circuits and obtain measurement results.
+
+### B. Creating the Quantum Circuit
+
+**Line 3: `qc = QuantumCircuit(3, 3)`**
+
+- Creates a quantum circuit containing **3 qubits and 3 classical bits**.
+- Quantum bits are numbered `q0`, `q1`, and `q2`.
+- Classical bits are numbered `c0`, `c1`, and `c2`.
+- Qubits store quantum information, while classical bits store measurement results.
+
+**Role of each qubit:**
+
+| Qubit | Purpose |
+|---|---|
+| q0 | Holds the initial quantum state to be teleported. |
+| q1 | One half of the entangled pair; used by the sender. |
+| q2 | Receiver's qubit; receives the teleported state. |
+
+**Possible questions:**
+- **Q: Why are 3 qubits required?**  
+  A: One qubit holds the original state, one is used by the sender, and one belongs to the receiver.
+- **Q: Why are 3 classical bits created?**  
+  A: To store the measurement results of all three qubits.
+
+### C. Preparing the Initial Quantum State
+
+**Line 4: `qc.ry(1.0, 0)`**
+
+- Applies an `RY` rotation gate to qubit 0.
+- The angle of rotation is 1.0 radian.
+- It rotates the qubit around the Y-axis of the Bloch sphere.
+- Starting from \(|0\rangle\), it creates a superposition:
+
+\[
+|\psi\rangle = \cos(0.5)|0\rangle+\sin(0.5)|1\rangle
+\]
+
+This is the initial quantum state that we want to teleport.
+
+**Possible questions:**
+- **Q: What does the RY gate do?**  
+  A: It rotates a qubit around the Y-axis.
+- **Q: What is the value of the angle?**  
+  A: 1.0 radian.
+- **Q: Why do we apply RY?**  
+  A: To prepare a quantum state containing both \(|0\rangle\) and \(|1\rangle\) components.
+
+**Line 5: `qc.rz(0.5, 0)`**
+
+- Applies an `RZ` rotation gate to qubit 0.
+- The angle is 0.5 radian.
+- It rotates the qubit around the Z-axis.
+- It changes the relative phase of the quantum state's components.
+
+**Possible questions:**
+- **Q: What does the RZ gate do?**  
+  A: It performs rotation around the Z-axis and changes the relative phase.
+- **Q: What is the difference between RY and RZ?**  
+  A: RY rotates around the Y-axis, whereas RZ rotates around the Z-axis.
+
+### D. Creating an Entangled Pair
+
+**Line 6: `qc.h(1)`**
+
+- Applies a Hadamard gate to qubit 1.
+- It converts the initial state \(|0\rangle\) into an equal superposition:
+
+\[
+|0\rangle \rightarrow \frac{|0\rangle+|1\rangle}{\sqrt{2}}
+\]
+
+- This prepares qubit 1 for entanglement.
+
+**Possible questions:**
+- **Q: What is a Hadamard gate?**  
+  A: It is a quantum gate that creates an equal superposition when applied to \(|0\rangle\).
+- **Q: What is superposition?**  
+  A: It is the ability of a qubit to exist in a combination of quantum states.
+
+**Line 7: `qc.cx(1, 2)`**
+
+- Applies a Controlled-X gate between qubits 1 and 2.
+- Qubit 1 acts as the control qubit.
+- Qubit 2 acts as the target qubit.
+- The target flips only when the control qubit is 1.
+- Along with the previous Hadamard gate, it creates an entangled Bell pair between q1 and q2:
+
+\[
+\frac{|00\rangle+|11\rangle}{\sqrt{2}}
+\]
+
+**Possible questions:**
+- **Q: What is a CX gate?**  
+  A: It is a two-qubit gate that flips the target when the control is 1.
+- **Q: What is a Bell pair?**  
+  A: It is a maximally entangled two-qubit state.
+- **Q: Which qubits are entangled here?**  
+  A: Qubits 1 and 2.
+
+**Line 8: `qc.barrier()`**
+
+- Adds a barrier to the circuit.
+- It separates the entanglement preparation stage from the next stage.
+- It does not change the quantum state or perform any computation.
+
+**Possible question:**
+- **Q: Does a barrier affect the quantum state?**  
+  A: No. It is used to separate circuit operations and control their ordering.
+
+### E. Bell-State Operations
+
+**Line 9: `qc.cx(0, 1)`**
+
+- Applies a CX gate with q0 as the control and q1 as the target.
+- This operation connects the original state with the entangled pair.
+- It is one of the essential operations in the teleportation protocol.
+
+**Possible question:**
+- **Q: Why is CX applied between q0 and q1?**  
+  A: To perform the first part of the Bell-state measurement procedure.
+
+**Line 10: `qc.h(0)`**
+
+- Applies a Hadamard gate to q0.
+- It transforms the original qubit's measurement basis.
+- Together, the CX and Hadamard operations prepare q0 and q1 for measurement in the computational basis.
+
+**Possible question:**
+- **Q: Why is the Hadamard gate applied after CX?**  
+  A: It helps convert the Bell-basis information into computational-basis measurement outcomes.
+
+### F. Measuring the Sender's Qubits
+
+**Line 11: `qc.measure(0, 0)`**
+
+- Measures qubit 0.
+- Stores its result in classical bit c0.
+- The measurement result will be either 0 or 1.
+
+**Line 12: `qc.measure(1, 1)`**
+
+- Measures qubit 1.
+- Stores its result in classical bit c1.
+- These two measurement results determine which correction operations must be applied to q2.
+
+**Possible questions:**
+- **Q: Why are q0 and q1 measured?**  
+  A: To obtain the two classical bits required for the receiver's correction operations.
+- **Q: Does measurement produce a quantum or classical result?**  
+  A: It produces a classical result.
+- **Q: What are c0 and c1 used for?**  
+  A: They control the conditional gates applied to q2.
+
+**Line 13: `qc.barrier()`**
+
+Separates the measurement stage from the correction stage. It does not modify the state.
+
+### G. Applying Conditional Corrections
+
+This is an important part of quantum teleportation.
+
+**Line 14: `with qc.if_test((qc.clbits[1], 1)):`**
+
+- Checks whether classical bit c1 has the value 1.
+- If the condition is true, the operation inside the block is executed.
+- If c1 is 0, the operation is skipped.
+
+**Possible question:**
+- **Q: What is `if_test()`?**  
+  A: It is a Qiskit conditional operation that executes a quantum instruction only when a specified classical condition is satisfied.
+
+**Line 15: `qc.x(2)`**
+
+- Applies an X gate to q2 if c1 is 1.
+- The X gate performs a bit flip:
+
+\[
+|0\rangle \rightarrow |1\rangle
+\]
+
+\[
+|1\rangle \rightarrow |0\rangle
+\]
+
+- This corrects the bit-flip error associated with the first measurement result.
+
+**Possible questions:**
+- **Q: Why is the X gate applied conditionally?**  
+  A: To correct the receiver's qubit according to the measurement result.
+- **Q: When is X applied?**  
+  A: When c1 = 1.
+
+**Line 16: `with qc.if_test((qc.clbits[0], 1)):`**
+
+- Checks whether c0 is equal to 1.
+- If the condition is true, the next operation is executed.
+
+**Line 17: `qc.z(2)`**
+
+- Applies a Z gate to q2 when c0 is 1.
+- The Z gate changes the phase of the \(|1\rangle\) component:
+
+\[
+|0\rangle \rightarrow |0\rangle
+\]
+
+\[
+|1\rangle \rightarrow -|1\rangle
+\]
+
+- This corrects the phase-flip error.
+
+**Possible questions:**
+- **Q: Why is the Z gate applied?**  
+  A: To correct the phase of the receiver's quantum state.
+- **Q: When is Z applied?**  
+  A: When c0 = 1.
+- **Q: What is the difference between X and Z?**  
+  A: X flips the computational bit, while Z changes the phase of the \(|1\rangle\) component.
+
+**Correction table:**
+
+| c1 | c0 | Correction applied to q2 |
+|---:|---:|---|
+| 0 | 0 | No correction |
+| 0 | 1 | Z gate |
+| 1 | 0 | X gate |
+| 1 | 1 | X gate followed by Z gate |
+
+The order matters: this code applies X first and Z second. For these two gates, the resulting state differs from applying Z then X only by a global phase, which does not affect measurement probabilities.
+
+### H. Measuring the Receiver's Qubit
+
+**Line 18: `qc.measure(2, 2)`**
+
+- Measures the receiver's qubit q2.
+- Stores the result in classical bit c2.
+- This gives the final measurement of the teleported state.
+
+**Important concept:** The receiver's qubit is measured only after the correction operations. This ensures that the corrections are applied before obtaining the final result.
+
+**Possible question:**
+- **Q: Why is q2 measured at the end?**  
+  A: To obtain the measurement result of the receiver's corrected quantum state.
+
+### I. Displaying the Circuit
+
+**Line 19: `print("Quantum Teleportation Algorithm")`**
+
+Displays the practical title.
+
+**Line 20: `print(qc.draw())`**
+
+Displays the complete quantum circuit diagram, including the gates, measurements, barriers, and conditional operations.
+
+**Possible question:**
+- **Q: What does `qc.draw()` do?**  
+  A: It displays the visual representation of the quantum circuit.
+
+### J. Executing the Circuit
+
+**Line 21: `simulator = AerSimulator()`**
+
+Creates the quantum simulator.
+
+**Line 22: `compiled_circuit = transpile(qc, simulator)`**
+
+Converts the circuit into instructions supported by the AerSimulator.
+
+**Line 23: `job = simulator.run(compiled_circuit, shots=1024)`**
+
+- Executes the circuit on the simulator.
+- `shots=1024` means the circuit is executed 1024 times.
+- Each execution is called a shot.
+- The circuit is independently initialized and executed for each shot.
+
+**Possible questions:**
+- **Q: What is a shot?**  
+  A: One execution of a quantum circuit.
+- **Q: Why are 1024 shots used?**  
+  A: To collect enough measurement samples and observe the probability distribution.
+- **Q: Does 1024 mean 1024 qubits?**  
+  A: No. It means 1024 circuit executions.
+
+**Line 24: `result = job.result()`**
+
+Retrieves the execution results after the simulator finishes running.
+
+**Line 25: `counts = result.get_counts()`**
+
+- Extracts the measurement results.
+- Returns a dictionary containing each measured bitstring and its frequency.
+
+### K. Displaying the Results
+
+**Line 26: `print("\nTeleportation Measurement Results:")`**
+
+Displays the heading for the measurement results.
+
+**Line 27: `for state, frequency in sorted(counts.items()):`**
+
+- Loops through the measurement results.
+- `counts.items()` returns the bitstrings and their frequencies.
+- `sorted()` arranges the results in ascending lexicographical order.
+- `state` stores a measured bitstring.
+- `frequency` stores how many times that bitstring occurred.
+
+**Line 28: `print(state, ":", frequency)`**
+
+Displays each measured bitstring and its frequency.
+
+**Line 29: `print("\nTotal Measurements:", sum(counts.values()))`**
+
+- Adds all the frequencies.
+- Displays the total number of measurements.
+- It should display **1024**, because the circuit was executed for 1024 shots.
+
+**Line 30: `print("Unique Measurement Results:", len(counts))`**
+
+- Counts the number of distinct bitstrings obtained.
+- `len(counts)` gives the number of unique measurement outcomes observed.
+
+**Possible questions:**
+- **Q: What does `get_counts()` return?**  
+  A: A dictionary containing measurement outcomes and their frequencies.
+- **Q: What does `sum(counts.values())` calculate?**  
+  A: The total number of shots.
+- **Q: What does `len(counts)` represent?**  
+  A: The number of distinct measurement outcomes.
+
+## 4. COMPLETE OUTPUT EXPLANATION
+
+Your output will have two main parts:
+
+### A. Quantum Circuit Diagram
+
+The circuit diagram displays:
+- Three quantum wires: q0, q1 and q2.
+- RY and RZ gates used to prepare the original quantum state.
+- Hadamard and CX gates used to create entanglement.
+- Measurement operations on q0 and q1.
+- Conditional X and Z gates applied to q2.
+- Final measurement of q2.
+
+The circuit represents the complete sequence of quantum teleportation operations.
+
+### B. Teleportation Measurement Results
+
+The output will look similar to this (frequencies are illustrative, not actual execution results):
+
+```text
+Teleportation Measurement Results:
+
+000 : 197
+001 : 58
+010 : 198
+011 : 59
+100 : 196
+101 : 60
+110 : 198
+111 : 58
+
+Total Measurements: 1024
+Unique Measurement Results: 8
+```
+
+**Note:** Your actual frequencies will vary slightly because quantum measurements are probabilistic.
+
+### Understanding the Bitstrings
+
+The output contains three classical bits:
+
+| Bit | Represents |
+|---|---|
+| c2 | Final measurement of receiver's qubit q2 |
+| c1 | Measurement result of q1 |
+| c0 | Measurement result of q0 |
+
+Qiskit displays the classical bits in reverse index order, so the bitstring is displayed as:
+
+\[
+c2\quad c1\quad c0
+\]
+
+For example:
+
+**Output: `101`**
+
+- c2 = 1: Receiver's final qubit was measured as 1.
+- c1 = 0: Measurement of q1 was 0.
+- c0 = 1: Measurement of q0 was 1.
+
+The correction operations are determined by c1 and c0.
+
+### Why Are There Multiple Results?
+
+The original quantum state is prepared using an RY rotation of 1 radian.
+
+Its measurement probabilities are:
+
+\[
+P(0)=\cos^2(0.5)\approx 0.7702
+\]
+
+\[
+P(1)=\sin^2(0.5)\approx 0.2298
+\]
+
+The RZ gate changes the phase but does not change these computational-basis measurement probabilities.
+
+Therefore:
+- Approximately 77% of the final q2 measurements should be 0.
+- Approximately 23% should be 1.
+- The two sender measurement bits c0 and c1 are uniformly distributed.
+
+All eight three-bit outcomes have nonzero probabilities. Their exact frequencies depend on the simulator's sampling.
+
+### Understanding the Final Two Statements
+
+**`Total Measurements: 1024`**
+
+This confirms that the circuit was executed 1024 times.
+
+**`Unique Measurement Results: 8`**
+
+There are three classical bits, so the maximum possible number of different bitstrings is:
+
+\[
+2^3=8
+\]
+
+Therefore, eight unique outcomes are possible.
+
+**Important practical observation:** Measuring q2 in the computational basis shows its 0/1 probability distribution, but it does not independently prove that the complete quantum state was teleported. To verify the full state, additional measurements in different bases or a state-fidelity calculation would be needed.
+
+---
+
+## 5. COMPLETE AIM-BASED THEORY
+
+### 5.1 What is Quantum Teleportation?
+
+Quantum teleportation is a quantum communication technique used to transfer an unknown quantum state from one location to another.
+
+It uses three essential resources:
+
+1. An original quantum state.
+2. An entangled pair of qubits.
+3. Two classical bits communicated from the sender to the receiver.
+
+The original quantum state is not physically transported. Instead, its quantum information is reconstructed on the receiver's qubit.
+
+### 5.2 How Does Quantum Teleportation Work?
+
+The process can be understood in five steps:
+
+**Step 1: Prepare the original state**
+
+The sender prepares a quantum state on q0 using RY and RZ gates.
+
+**Step 2: Create an entangled pair**
+
+The Hadamard and CX gates create an entangled pair between q1 and q2.
+
+- q1 belongs to the sender.
+- q2 belongs to the receiver.
+
+**Step 3: Perform Bell-state measurement operations**
+
+The sender applies CX and Hadamard gates to q0 and q1, followed by measurements.
+
+**Step 4: Send classical information and apply corrections**
+
+The two measurement results are used to decide whether X and Z gates should be applied to q2.
+
+**Step 5: Obtain the teleported state**
+
+After applying the required corrections, q2 contains the original quantum state (up to an irrelevant global phase).
+
+### 5.3 Role of the Sender and Receiver
+
+| Sender | Receiver |
+|---|---|
+| Holds the original state q0. | Holds entangled qubit q2. |
+| Shares an entangled pair with the receiver. | Shares an entangled pair with the sender. |
+| Performs Bell-state measurement operations. | Applies conditional correction gates. |
+| Sends two classical measurement bits. | Reconstructs the original quantum state. |
+
+### 5.4 Why Are Classical Bits Required?
+
+The sender obtains two classical measurement bits.
+
+These bits tell the receiver which correction operations are necessary.
+
+| Measurement result (c1, c0) | Operation |
+|---|---|
+| 00 | No operation |
+| 01 | Z gate |
+| 10 | X gate |
+| 11 | X and Z gates |
+
+Without the measurement information and corresponding corrections, the receiver cannot reconstruct the original state using this protocol.
+
+---
+
+## 6. IMPORTANT VIVA QUESTIONS WITH ANSWERS
+
+### Basic Questions
+
+**Q1. What is the aim of this practical?**  
+To implement and simulate the quantum teleportation algorithm using Qiskit.
+
+**Q2. What is quantum teleportation?**  
+It is a process of transferring an unknown quantum state using entanglement, measurement and classical communication.
+
+**Q3. Does quantum teleportation transfer a physical qubit?**  
+No. It transfers the quantum state, not the physical qubit.
+
+**Q4. How many qubits are used in this practical?**  
+Three qubits.
+
+**Q5. What are the roles of the three qubits?**  
+q0 holds the original state, q1 is the sender's entangled qubit, and q2 is the receiver's entangled qubit.
+
+**Q6. How many classical bits are required?**  
+Two classical bits are required for the teleportation corrections. This circuit allocates three classical bits because it also stores the final measurement of q2.
+
+### Quantum Gate Questions
+
+**Q7. What is the purpose of the RY gate?**  
+It rotates the qubit around the Y-axis and helps prepare the initial quantum state.
+
+**Q8. What is the purpose of the RZ gate?**  
+It rotates the qubit around the Z-axis and changes its relative phase.
+
+**Q9. What is a Hadamard gate?**  
+It is a quantum gate that creates superposition when applied to a computational basis state such as \(|0\rangle\).
+
+**Q10. What is a CX gate?**  
+It is a controlled-NOT gate that flips the target qubit when the control qubit is 1.
+
+**Q11. What is a Bell pair?**  
+A maximally entangled state of two qubits.
+
+**Q12. Which gates create the Bell pair in this program?**  
+The Hadamard gate on q1 followed by the CX gate from q1 to q2.
+
+### Measurement and Correction Questions
+
+**Q13. Why are q0 and q1 measured?**  
+To obtain the two classical bits required for the correction operations.
+
+**Q14. Why is q2 not measured immediately?**  
+Because correction operations must first be applied to reconstruct the original state.
+
+**Q15. Why is the X gate used?**  
+To correct the bit-flip component of the state.
+
+**Q16. Why is the Z gate used?**  
+To correct the phase-flip component of the state.
+
+**Q17. What happens when c1 = 1?**  
+The X gate is applied to q2.
+
+**Q18. What happens when c0 = 1?**  
+The Z gate is applied to q2.
+
+**Q19. What happens when both c0 and c1 are 1?**  
+Both X and Z gates are applied to q2.
+
+**Q20. What is classical communication in quantum teleportation?**  
+It is the transmission of the two classical measurement results from the sender to the receiver.
+
+### Qiskit and Simulator Questions
+
+**Q21. What is Qiskit?**  
+An open-source Python framework for quantum computing.
+
+**Q22. What is AerSimulator?**  
+A simulator used to execute quantum circuits on a classical computer.
+
+**Q23. What is transpile?**  
+It converts a quantum circuit into instructions supported by the selected backend.
+
+**Q24. What are shots?**  
+The number of times a quantum circuit is executed.
+
+**Q25. Why are 1024 shots used?**  
+To obtain sufficient measurement samples and observe the probability distribution.
+
+**Q26. What does get_counts() do?**  
+It returns the measured bitstrings and their frequencies.
+
+**Q27. What is the purpose of if_test()?**  
+It executes a quantum operation only when a specified classical condition is satisfied.
+
+**Q28. What does qc.draw() do?**  
+It displays the quantum circuit diagram.
+
+### Conceptual and Tricky Questions
+
+**Q29. What is the difference between classical and quantum teleportation?**  
+Classical communication transfers classical information, whereas quantum teleportation transfers an unknown quantum state using entanglement and classical communication.
+
+**Q30. Can quantum teleportation happen without entanglement?**  
+No. Entanglement is an essential resource for standard quantum teleportation.
+
+**Q31. Can quantum teleportation be used to send information faster than light?**  
+No. Classical communication is necessary, so it cannot be used for faster-than-light communication.
+
+**Q32. Does quantum teleportation violate the no-cloning theorem?**  
+No. The original state is destroyed by measurement during the protocol, so it is not copied.
+
+**Q33. What is the no-cloning theorem?**  
+It states that an arbitrary unknown quantum state cannot be copied perfectly.
+
+**Q34. What happens if the receiver does not apply the correction gates?**  
+The receiver's qubit will generally not contain the original quantum state in the required form.
+
+**Q35. What is the difference between superposition and entanglement?**  
+Superposition means a qubit can exist in a combination of states. Entanglement means multiple qubits share quantum correlations that cannot be described independently.
+
+**Q36. What is the Bloch sphere?**  
+It is a geometrical representation of the state of a single qubit.
+
+**Q37. What is the difference between X and Z gates?**  
+X changes the computational basis state, while Z changes the phase of the \(|1\rangle\) component.
+
+**Q38. Does this practical use a real quantum computer?**  
+No. It uses AerSimulator, which simulates quantum circuit execution on a classical computer.
+
+**Q39. Why can the output differ every time?**  
+Because quantum measurement is probabilistic. Different executions can produce different measurement outcomes.
+
+**Q40. How can we verify that the original state has been successfully teleported?**  
+We can compare the receiver's final quantum state with the original state using quantum state tomography or state fidelity.
+
+---
+
+## 7. MOST IMPORTANT POINTS TO REMEMBER FOR THE EXTERNAL
+
+| Topic | Answer to remember |
+|---|---|
+| Algorithm | Quantum Teleportation |
+| Total qubits | 3 |
+| Total classical bits | 3 in this implementation |
+| Original state | q0 |
+| Entangled pair | q1 and q2 |
+| Entanglement gates | H and CX |
+| Bell measurement operations | CX and H |
+| Classical measurement bits | c0 and c1 |
+| Bit-flip correction | X gate |
+| Phase-flip correction | Z gate |
+| Conditional operation | `if_test()` |
+| Simulator | AerSimulator |
+| Number of shots | 1024 |
+| Total expected measurements | 1024 |
+| Maximum possible unique outcomes | 8 |
+| Final receiver qubit | q2 |
+
+### One-Minute Explanation for the External
+
+If the examiner asks, **"Explain your practical,"** you can answer:
+
+Quantum teleportation is a technique used to transfer an unknown quantum state from a sender to a receiver using entanglement and classical communication. In this practical, we use three qubits. First, we prepare the original quantum state on q0 using RY and RZ gates. Then, we create an entangled pair between q1 and q2 using Hadamard and CX gates. Next, we apply CX and Hadamard gates to q0 and q1 and measure them to obtain two classical bits. Based on these measurement results, conditional X and Z gates are applied to q2. Finally, we measure q2 to obtain the output. We execute the circuit using AerSimulator for 1024 shots and analyse the measurement frequencies.
