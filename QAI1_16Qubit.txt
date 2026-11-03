@@ -1,0 +1,1031 @@
+# AIM: To Implement a 16-Qubit Quantum Random Number Generator (QRNG) Using Qiskit
+
+## 1. INSTALLATION AND EXECUTION COMMANDS
+
+**Installation commands:**
+
+**Windows:**
+```bash
+python -m pip install qiskit
+python practical_qrng.py
+```
+
+**Ubuntu/Linux:**
+```bash
+pip install qiskit
+python3 -m pip install qiskit
+python3 practical_qrng.py
+```
+
+**Note:** This practical uses Qiskit's `StatevectorSampler` primitive to simulate quantum measurements.
+
+---
+
+## 2. IMPORTING LIBRARIES
+
+### `from qiskit import QuantumCircuit`
+
+- Imports the `QuantumCircuit` class from Qiskit.
+- Qiskit is a Python-based framework used for quantum computing.
+- `QuantumCircuit` is used to create and design quantum circuits.
+- A quantum circuit consists of quantum gates, qubits and measurements.
+
+**Possible Viva Questions:**
+
+**Q1. What is Qiskit?**  
+Qiskit is an open-source Python framework used to create, simulate and execute quantum computing programs.
+
+**Q2. What is QuantumCircuit?**  
+QuantumCircuit is a class used to create quantum circuits by adding quantum gates and measurements.
+
+**Q3. What is a quantum circuit?**  
+A quantum circuit is a sequence of quantum operations performed on qubits to process quantum information.
+
+### `from qiskit.primitives import StatevectorSampler`
+
+- Imports the StatevectorSampler primitive from Qiskit.
+- It is used to simulate quantum circuit measurements using statevector-based simulation.
+- It generates measurement results based on the quantum state of the circuit.
+- It allows us to obtain measurement outcomes without requiring a real quantum computer.
+
+**Possible Viva Questions:**
+
+**Q1. What is StatevectorSampler?**  
+It is a Qiskit primitive that simulates quantum circuit measurements using statevector simulation.
+
+**Q2. What is a statevector?**  
+A statevector is a mathematical representation of the quantum state of a system.
+
+**Q3. Do we need a real quantum computer for this practical?**  
+No. We can execute this practical using Qiskit's statevector simulator.
+
+---
+
+## 3. DEFINING THE NUMBER OF QUBITS
+
+### `n = 16`
+
+- Creates a variable named `n`.
+- Assigns the value 16 to it.
+- It specifies that our quantum circuit will contain 16 qubits.
+- Each qubit can produce a measurement result of either 0 or 1.
+- Therefore, 16 measured qubits produce a 16-bit binary number.
+
+**Possible Viva Questions:**
+
+**Q1. What is a qubit?**  
+A qubit stands for quantum bit. It is the basic unit of quantum information.
+
+**Q2. What is the difference between a bit and a qubit?**
+
+- Bit: Can have either 0 or 1.
+- Qubit: Can exist in a quantum superposition of 0 and 1.
+
+**Q3. Why are 16 qubits used?**  
+To generate a 16-bit binary random number.
+
+**Q4. How many possible combinations can 16 bits represent?**
+
+Formula:
+
+2ⁿ
+
+Here, n = 16.
+
+2¹⁶ = 65,536 possible combinations.
+
+**Q5. What is the range of a 16-bit unsigned decimal number?**
+
+0 to 65,535.
+
+---
+
+## 4. DEFINING THE NUMBER OF SHOTS
+
+### `shots = 1`
+
+- Defines the number of times the quantum circuit is executed for measurement.
+- Here, shots = 1 means the circuit is measured once.
+- Since we have 16 qubits, one measurement produces one 16-bit binary result.
+
+**Possible Viva Questions:**
+
+**Q1. What are shots in quantum computing?**  
+Shots represent the number of times a quantum circuit is executed to collect measurement results.
+
+**Q2. Why is shots set to 1?**  
+Because we need only one 16-bit random number.
+
+**Q3. What happens if shots = 100?**  
+The circuit is measured 100 times, producing 100 measurement outcomes.
+
+**Q4. What is the difference between qubits and shots?**
+
+- Qubits determine the number of quantum bits in the circuit.
+- Shots determine how many times the circuit is executed.
+
+---
+
+## 5. CREATING THE QUANTUM CIRCUIT
+
+### `qc = QuantumCircuit(n)`
+
+- Creates a quantum circuit using the QuantumCircuit class.
+- The variable `n` contains 16.
+- Therefore, a circuit containing 16 qubits is created.
+- The circuit is stored in the variable `qc`.
+
+**Possible Viva Questions:**
+
+**Q1. What does QuantumCircuit(16) mean?**  
+It creates a quantum circuit containing 16 qubits.
+
+**Q2. What is the purpose of the variable `qc`?**  
+It stores the quantum circuit and allows us to perform operations on it.
+
+**Q3. What is the initial state of a qubit?**  
+By default, each qubit starts in the computational basis state |0⟩.
+
+**Q4. What is the computational basis?**  
+It is the standard basis used to represent quantum states, consisting of |0⟩ and |1⟩.
+
+---
+
+## 6. APPLYING THE HADAMARD GATE
+
+### `for qubit in range(n):`
+
+- Creates a for loop.
+- `range(n)` generates numbers from 0 to 15.
+- These numbers represent the indices of the 16 qubits.
+- The loop accesses each qubit one by one.
+
+### `qc.h(qubit)`
+
+- Applies the Hadamard gate to the current qubit.
+- The Hadamard gate is represented by the symbol H.
+- It converts the initial state |0⟩ into an equal superposition of |0⟩ and |1⟩.
+- This gives both possible measurement outcomes equal probability.
+
+**Mathematical representation:**
+
+H|0⟩ = (|0⟩ + |1⟩)/√2
+
+Therefore:
+
+- Probability of measuring 0 = 50%.
+- Probability of measuring 1 = 50%.
+
+Since the Hadamard gate is applied to all 16 qubits, all qubits enter an equal superposition.
+
+**Possible Viva Questions:**
+
+**Q1. What is a Hadamard gate?**  
+A Hadamard gate is a single-qubit quantum gate that creates an equal superposition when applied to |0⟩.
+
+**Q2. Why is the Hadamard gate used in this practical?**  
+It creates an equal probability of obtaining 0 or 1, which is essential for generating random binary outcomes.
+
+**Q3. What is superposition?**  
+Superposition is a fundamental quantum principle in which a qubit can exist in a combination of multiple quantum states before measurement.
+
+**Q4. What happens when the Hadamard gate is applied to |0⟩?**
+
+It produces:
+
+(|0⟩ + |1⟩)/√2
+
+**Q5. What is the probability of getting 0 and 1 after applying the Hadamard gate?**
+
+- P(0) = 50%
+- P(1) = 50%
+
+**Q6. Is the Hadamard gate reversible?**  
+Yes. It is a unitary gate and is its own inverse.
+
+**Q7. Is the Hadamard gate applied to one qubit or multiple qubits?**  
+It is a single-qubit gate, but we apply it separately to all 16 qubits using the loop.
+
+---
+
+## 7. MEASURING ALL QUBITS
+
+### `qc.measure_all()`
+
+- Measures all 16 qubits in the quantum circuit.
+- Measurement converts quantum information into classical information.
+- Each qubit produces either 0 or 1.
+- The measurement outcomes are stored in classical bits.
+- After measurement, we obtain a 16-bit binary string.
+
+**Possible Viva Questions:**
+
+**Q1. What is quantum measurement?**  
+Quantum measurement is the process of observing a quantum state and obtaining a classical result.
+
+**Q2. What happens when we measure a qubit in superposition?**  
+It collapses into one of the computational basis states, either |0⟩ or |1⟩.
+
+**Q3. What is quantum state collapse?**  
+It is the process in which a superposition state produces a definite measurement outcome.
+
+**Q4. Why do we use measure_all()?**  
+To measure all 16 qubits together and obtain a complete 16-bit result.
+
+**Q5. What is the difference between a quantum bit and a classical bit?**  
+A quantum bit can exist in superposition, whereas a classical bit stores either 0 or 1.
+
+---
+
+## 8. CREATING THE SAMPLER
+
+### `sampler = StatevectorSampler()`
+
+- Creates an object of the StatevectorSampler class.
+- The sampler is used to simulate the measurement of the quantum circuit.
+- It calculates measurement outcomes based on the circuit's quantum state.
+- The object is stored in the variable `sampler`.
+
+**Possible Viva Questions:**
+
+**Q1. What is a sampler in Qiskit?**  
+A sampler is a primitive used to obtain classical measurement outcomes from quantum circuits.
+
+**Q2. Why do we use StatevectorSampler?**  
+To simulate the quantum measurement process without requiring actual quantum hardware.
+
+**Q3. What is the difference between a simulator and a real quantum computer?**
+
+- Simulator: Uses classical computation to model quantum behaviour.
+- Real quantum computer: Uses physical quantum hardware to perform quantum operations.
+
+---
+
+## 9. EXECUTING THE QUANTUM CIRCUIT
+
+### `job = sampler.run([qc], shots=shots)`
+
+- Executes the quantum circuit using the sampler.
+- `[qc]` passes the quantum circuit as a list.
+- `shots=shots` specifies that the circuit should be executed once.
+- The execution information is stored in the variable `job`.
+
+**Possible Viva Questions:**
+
+**Q1. What does run() do?**  
+It submits the quantum circuit for execution or simulation.
+
+**Q2. Why is the circuit written inside square brackets?**  
+Because the sampler accepts a collection of circuits.
+
+**Q3. What is a job in Qiskit?**  
+A job represents a submitted quantum circuit execution task.
+
+**Q4. What happens if we increase the number of shots?**  
+More measurement samples are collected, allowing us to generate multiple random numbers and study their distribution.
+
+---
+
+## 10. RETRIEVING THE EXECUTION RESULT
+
+### `result = job.result()`
+
+- Retrieves the execution result of the submitted job.
+- The result contains the measurement data obtained from the quantum circuit.
+- It is stored in the variable `result`.
+
+**Possible Viva Questions:**
+
+**Q1. What does job.result() do?**  
+It retrieves the completed execution results of the quantum circuit.
+
+**Q2. Why do we need the result variable?**  
+To access the measurement outcomes generated by the sampler.
+
+**Q3. What type of information does the result contain?**  
+It contains the measurement data and associated execution information.
+
+---
+
+## 11. EXTRACTING THE MEASUREMENT COUNTS
+
+### `counts = result[0].data.meas.get_counts()`
+
+This statement extracts the measurement results.
+
+Let's understand it step by step:
+
+**1. `result[0]`**
+
+- Accesses the result of the first circuit.
+- The sampler returns results corresponding to the submitted circuits.
+
+**2. `.data`**
+
+- Accesses the measurement data associated with the circuit.
+
+**3. `.meas`**
+
+- Accesses the measurement register named `meas`.
+- Qiskit's `measure_all()` creates a classical register for storing measurement results.
+
+**4. `.get_counts()`**
+
+- Returns the measurement outcomes and their frequencies.
+- The output is stored in dictionary format.
+- The binary measurement strings are dictionary keys.
+- Their occurrence frequencies are dictionary values.
+
+**Example:**
+
+`{'1010101010101010': 1}`
+
+Here:
+
+- Binary number = 1010101010101010
+- Frequency = 1
+
+Since shots = 1, only one measurement outcome is obtained.
+
+**Possible Viva Questions:**
+
+**Q1. What are measurement counts?**  
+Measurement counts represent the frequency of each binary outcome obtained after executing a quantum circuit.
+
+**Q2. What is a dictionary in Python?**  
+A dictionary is a data structure that stores information in key-value pairs.
+
+**Q3. What is the key in the counts dictionary?**  
+The key represents the measured binary outcome.
+
+**Q4. What is the value in the counts dictionary?**  
+The value represents how many times that outcome occurred.
+
+**Q5. Why do we use get_counts()?**  
+To retrieve the frequency of different measurement outcomes.
+
+---
+
+## 12. EXTRACTING THE RANDOM BINARY NUMBER
+
+### `random_number = list(counts.keys())[0].replace(" ", "")`
+
+This statement extracts the generated 16-bit binary number.
+
+Let's understand each operation:
+
+**1. `counts.keys()`**
+
+- Retrieves all keys from the counts dictionary.
+- The keys represent the binary measurement outcomes.
+
+**2. `list(counts.keys())`**
+
+- Converts the dictionary keys into a Python list.
+
+**3. `[0]`**
+
+- Selects the first element from the list.
+- Since shots = 1, there is only one observed outcome.
+
+**4. `.replace(" ", "")`**
+
+- Removes spaces from the binary string.
+- Qiskit may display measurement outcomes in groups separated by spaces.
+- This operation combines them into one continuous binary string.
+
+**Example:**
+
+Before removing spaces:
+
+`10101010 11001100`
+
+After removing spaces:
+
+`1010101011001100`
+
+**Possible Viva Questions:**
+
+**Q1. Why do we use keys()?**  
+To retrieve the binary measurement outcomes from the dictionary.
+
+**Q2. Why do we convert keys into a list?**  
+To access an individual measurement outcome using its index.
+
+**Q3. What does `[0]` represent?**  
+It selects the first measurement outcome.
+
+**Q4. Why do we use replace()?**  
+To remove spaces and obtain a continuous 16-bit binary number.
+
+**Q5. Why is the output stored as a string?**  
+Because binary measurement outcomes are initially represented as text.
+
+---
+
+## 13. DISPLAYING THE OUTPUT
+
+### `print("16-Qubit Quantum Random Number Generator")`
+
+- Displays the title of the practical.
+- It identifies the program as a 16-qubit quantum random number generator.
+
+### `print("Number of Qubits:", n)`
+
+- Displays the number of qubits used.
+- Since n = 16, the output is 16.
+
+### `print("Random 16-bit Number:", random_number)`
+
+- Displays the binary random number obtained from quantum measurement.
+- The number contains 16 binary digits.
+
+### `print("Decimal Equivalent:", int(random_number, 2))`
+
+- Converts the binary number into its decimal equivalent.
+- `int()` is a Python function used for integer conversion.
+- The second argument, 2, specifies that the input number is in binary (base 2).
+
+**Example:**
+
+Binary number:
+
+`1010`
+
+Decimal conversion:
+
+(1 × 2³) + (0 × 2²) + (1 × 2¹) + (0 × 2⁰)
+
+= 8 + 0 + 2 + 0
+
+= 10
+
+Therefore, the decimal equivalent is 10.
+
+**Possible Viva Questions:**
+
+**Q1. Why do we convert binary into decimal?**  
+To represent the generated random number in a commonly used numerical format.
+
+**Q2. What is the purpose of int(random_number, 2)?**  
+It converts a binary string into a decimal integer.
+
+**Q3. What is the difference between binary and decimal?**
+
+- Binary: Base 2, uses digits 0 and 1.
+- Decimal: Base 10, uses digits 0 to 9.
+
+**Q4. What is the decimal range of a 16-bit unsigned number?**  
+0 to 65,535.
+
+---
+
+## 14. DISPLAYING THE QUANTUM CIRCUIT
+
+### `print("\nQuantum Circuit:")`
+
+- Displays the heading Quantum Circuit.
+- `\n` moves the cursor to a new line.
+
+### `print(qc.draw(output="text"))`
+
+- Displays the quantum circuit in text format.
+- `qc.draw()` generates a visual representation of the circuit.
+- `output="text"` specifies that the circuit should be displayed using text characters.
+- It shows the Hadamard gates and measurement operations applied to the qubits.
+
+**Possible Viva Questions:**
+
+**Q1. What does qc.draw() do?**  
+It generates a visual representation of the quantum circuit.
+
+**Q2. What does output="text" mean?**  
+It displays the circuit in text-based format.
+
+**Q3. What does H represent in the circuit?**  
+It represents the Hadamard gate.
+
+**Q4. What does measurement represent in the circuit?**  
+It represents the conversion of quantum states into classical binary outcomes.
+
+---
+
+# 15. UNDERSTANDING THE COMPLETE OUTPUT
+
+The actual binary number changes between executions because the measurement outcomes are probabilistic.
+
+The following is an **illustrative output**. Your actual output may be different.
+
+```text
+16-Qubit Quantum Random Number Generator
+Number of Qubits: 16
+Random 16-bit Number: 1010101011001100
+Decimal Equivalent: 43724
+
+Quantum Circuit:
+     ┌───┐ ░ ┌─┐
+q_0: ┤ H ├─░─┤M├
+     ├───┤ ░ └╥┘
+q_1: ┤ H ├─░──╫─
+     ...
+```
+
+### 1. 16-Qubit Quantum Random Number Generator
+
+- Displays the name of the implemented practical.
+- Indicates that the program generates a random number using 16 qubits.
+
+### 2. Number of Qubits: 16
+
+- Indicates that 16 qubits are used.
+- Each qubit produces one binary measurement result.
+- Therefore, the final result contains 16 bits.
+
+### 3. Random 16-bit Number
+
+Example:
+
+`1010101011001100`
+
+- This is the binary number generated through quantum measurement.
+- It contains 16 digits.
+- Each digit represents the measurement result of a qubit.
+
+### 4. Decimal Equivalent: 43724
+
+The binary number is converted into decimal.
+
+For example:
+
+`1010101011001100`
+
+= (1 × 2¹⁵) + (0 × 2¹⁴) + (1 × 2¹³) + (0 × 2¹²) + (1 × 2¹¹) + (0 × 2¹⁰) + (1 × 2⁹) + (0 × 2⁸) + (1 × 2⁷) + (1 × 2⁶) + (0 × 2⁵) + (0 × 2⁴) + (1 × 2³) + (1 × 2²) + (0 × 2¹) + (0 × 2⁰)
+
+= **43,724**
+
+### 5. Quantum Circuit
+
+The circuit diagram represents the operations performed on the 16 qubits.
+
+- **Horizontal lines:** Represent individual qubits.
+- **H gates:** Represent Hadamard operations.
+- **Measurement symbols (M):** Represent measurement operations.
+- **Classical register:** Stores the measured binary results.
+
+**Overall interpretation:**
+
+1. Initially, all 16 qubits are in the |0⟩ state.
+2. Hadamard gates are applied to all qubits.
+3. All qubits enter equal superposition.
+4. All qubits are measured.
+5. The measurement outcomes form a 16-bit binary number.
+6. The binary number is converted into decimal.
+7. The final random number is displayed.
+
+---
+
+# 16. IMPORTANT CONCEPTS RELATED TO THE AIM
+
+## 1. What is Quantum Computing?
+
+Quantum computing is a type of computing that uses principles of quantum mechanics to process information.
+
+Traditional computers use bits, whereas quantum computers use qubits.
+
+**Example:**
+- Classical computer: Uses 0 and 1.
+- Quantum computer: Uses qubits that can exist in superposition.
+
+## 2. What is a Qubit?
+
+A qubit (quantum bit) is the fundamental unit of quantum information.
+
+A qubit can be represented mathematically as:
+
+|ψ⟩ = α|0⟩ + β|1⟩
+
+Where:
+
+- α = Probability amplitude of state |0⟩.
+- β = Probability amplitude of state |1⟩.
+- |0⟩ and |1⟩ are computational basis states.
+
+The probabilities are:
+
+P(0) = |α|²
+
+P(1) = |β|²
+
+The total probability is:
+
+|α|² + |β|² = 1
+
+## 3. What is Superposition?
+
+Superposition is a quantum mechanical principle in which a qubit can exist in a combination of the states |0⟩ and |1⟩.
+
+For example:
+
+|ψ⟩ = (|0⟩ + |1⟩)/√2
+
+This represents equal superposition.
+
+The probabilities are:
+
+- P(0) = 50%
+- P(1) = 50%
+
+**Importance in this practical:**
+
+Superposition is used to create equal probability measurement outcomes, which helps generate random binary values.
+
+## 4. What is a Hadamard Gate?
+
+The Hadamard gate is a single-qubit quantum gate used to create superposition.
+
+Its matrix representation is:
+
+H = 1/√2 ×
+
+| 1  1 |  
+| 1 -1 |
+
+Its important transformations are:
+
+H|0⟩ = (|0⟩ + |1⟩)/√2
+
+H|1⟩ = (|0⟩ - |1⟩)/√2
+
+**Importance:**
+
+In this practical, the Hadamard gate is applied to all 16 qubits to create equal superposition.
+
+## 5. What is Quantum Measurement?
+
+Quantum measurement is the process of observing a quantum system to obtain a classical result.
+
+Before measurement, the qubit may be in superposition.
+
+After measurement, it produces a definite result:
+
+- 0
+- 1
+
+**Importance:**
+
+Measurement converts the quantum state into binary values that can be used to generate a random number.
+
+## 6. What is Quantum State Collapse?
+
+Quantum state collapse refers to the transition from a superposition state to a definite measurement outcome.
+
+For example:
+
+Before measurement:
+
+(|0⟩ + |1⟩)/√2
+
+After measurement:
+
+Either |0⟩ or |1⟩.
+
+The result is probabilistic.
+
+## 7. What is Quantum Random Number Generation (QRNG)?
+
+QRNG stands for Quantum Random Number Generation.
+
+It is a technique used to generate random numbers using quantum mechanical phenomena.
+
+Unlike conventional random number generators, which generally use mathematical algorithms, QRNG uses quantum measurement outcomes.
+
+**Working:**
+
+1. Initialize qubits.
+2. Apply Hadamard gates.
+3. Create superposition.
+4. Measure the qubits.
+5. Obtain binary outcomes.
+6. Combine the outcomes to generate a random number.
+
+## 8. What is Classical Random Number Generation?
+
+Classical random number generation generally uses mathematical algorithms to produce random-looking values.
+
+For example, Python's `random` module generates pseudorandom numbers.
+
+These numbers are produced using deterministic algorithms and an initial value called a seed.
+
+**Difference between QRNG and Classical RNG:**
+
+| Quantum RNG | Classical RNG |
+|---|---|
+| Uses quantum phenomena. | Uses mathematical algorithms. |
+| Uses quantum measurement. | Uses computational methods. |
+| Can generate true physical randomness with suitable quantum hardware. | Usually generates pseudorandom values. |
+| Requires a quantum source or suitable quantum hardware for physical randomness. | Can run on ordinary computers. |
+
+**Important:** This practical uses `StatevectorSampler`, which simulates quantum measurement using classical computation. Therefore, it demonstrates the QRNG principle but does not obtain physical quantum randomness from real quantum hardware.
+
+## 9. What is a Statevector?
+
+A statevector is a mathematical representation of the complete quantum state of a system.
+
+For one qubit, the statevector contains two complex amplitudes.
+
+For 16 qubits, the statevector contains:
+
+2¹⁶ = 65,536 amplitudes.
+
+Each amplitude represents a computational basis state.
+
+**Importance:**
+
+Statevector simulation allows us to calculate the quantum state and simulate measurement probabilities.
+
+## 10. What is a Quantum Gate?
+
+A quantum gate is an operation that changes the state of one or more qubits.
+
+Examples:
+
+| Quantum Gate | Purpose |
+|---|---|
+| X Gate | Flips the qubit state from 0 to 1 or 1 to 0. |
+| Y Gate | Performs a quantum state rotation around the Y-axis. |
+| Z Gate | Changes the phase of the quantum state. |
+| H Gate | Creates superposition. |
+| CNOT Gate | Performs a controlled-NOT operation on two qubits. |
+| S Gate | Applies a phase shift of π/2. |
+| T Gate | Applies a phase shift of π/4. |
+
+## 11. What is Entanglement?
+
+Quantum entanglement is a phenomenon in which two or more qubits become correlated so that their joint quantum state cannot be described independently.
+
+For example:
+
+(|00⟩ + |11⟩)/√2
+
+If the first qubit is measured as 0, the second will also be 0. If the first is measured as 1, the second will also be 1.
+
+**Is entanglement used in this practical?**
+
+No. This practical uses Hadamard gates independently on all 16 qubits. No entangling gates are applied.
+
+## 12. What is Binary Number System?
+
+The binary number system is a number system with base 2.
+
+It uses only two digits:
+
+- 0
+- 1
+
+Each position represents a power of 2.
+
+Example:
+
+Binary = 1010
+
+Decimal = 10
+
+**Importance:**
+
+Quantum measurement produces binary outcomes, which are combined to form a binary random number.
+
+## 13. What is Decimal Number System?
+
+The decimal number system is a number system with base 10.
+
+It uses digits from 0 to 9.
+
+In this practical, the generated binary number is converted into decimal using Python's `int()` function.
+
+## 14. What is a Random Number Generator?
+
+A Random Number Generator (RNG) is a system that generates numbers that appear unpredictable.
+
+There are two major categories:
+
+1. Pseudorandom Number Generator (PRNG).
+2. True Random Number Generator (TRNG).
+
+QRNG is a quantum-based approach to generating physical random numbers.
+
+## 15. Applications of QRNG
+
+QRNG is useful in several fields:
+
+1. **Cryptography:** Generating random keys for secure communication.
+2. **Cybersecurity:** Generating unpredictable security tokens.
+3. **Scientific Research:** Supporting random sampling and experiments.
+4. **Simulation:** Generating random values for probabilistic simulations.
+5. **Gaming:** Generating unpredictable outcomes.
+6. **Statistical Sampling:** Supporting randomized sampling methods.
+
+---
+
+# 17. IMPORTANT AIM-BASED VIVA QUESTIONS WITH ANSWERS
+
+### Q1. What is the main aim of this practical?
+
+The aim is to implement a 16-qubit Quantum Random Number Generator using Qiskit by applying Hadamard gates and measuring the qubits to generate a random binary number.
+
+### Q2. What is QRNG?
+
+QRNG stands for Quantum Random Number Generator. It generates random numbers using quantum mechanical phenomena.
+
+### Q3. Why is quantum computing used for random number generation?
+
+Quantum mechanics provides probabilistic measurement outcomes, which can be used to generate physically random values.
+
+### Q4. How many qubits are used in this practical?
+
+16 qubits are used.
+
+### Q5. How many possible outcomes can 16 qubits generate?
+
+2¹⁶ = 65,536 possible outcomes.
+
+### Q6. What is the range of the generated 16-bit number?
+
+0 to 65,535, considering an unsigned binary number.
+
+### Q7. Which gate is used to generate superposition?
+
+Hadamard gate.
+
+### Q8. Why do we apply Hadamard gates to all qubits?
+
+To create an equal superposition for each qubit, giving equal probabilities of measuring 0 and 1.
+
+### Q9. What is the probability of obtaining 0 or 1?
+
+For each ideally prepared qubit:
+
+- P(0) = 50%.
+- P(1) = 50%.
+
+### Q10. What is the initial state of all qubits?
+
+All qubits are initially in the |0⟩ state.
+
+### Q11. What happens after applying the Hadamard gate?
+
+Each qubit enters an equal superposition of |0⟩ and |1⟩.
+
+### Q12. What is the purpose of measurement?
+
+Measurement converts quantum information into classical binary information.
+
+### Q13. What is quantum state collapse?
+
+It is the process through which a superposition state produces a definite measurement outcome.
+
+### Q14. What is the purpose of shots?
+
+Shots specify the number of times a quantum circuit is executed to collect measurement outcomes.
+
+### Q15. Why are shots set to 1?
+
+Because we want to generate only one 16-bit random number.
+
+### Q16. What happens if shots are set to 100?
+
+The circuit produces 100 measurement samples. Each sample represents a 16-bit outcome.
+
+### Q17. What is StatevectorSampler?
+
+It is a Qiskit primitive that simulates quantum circuit measurements using statevector-based simulation.
+
+### Q18. What is the difference between StatevectorSampler and real quantum hardware?
+
+StatevectorSampler uses classical computation to simulate quantum behaviour, whereas real quantum hardware performs operations on physical qubits.
+
+### Q19. Does this practical generate true quantum randomness?
+
+Not physically. It simulates the quantum measurement process using a classical statevector simulator. A real quantum device or physical quantum entropy source is required to obtain physical quantum randomness.
+
+### Q20. What is the difference between QRNG and PRNG?
+
+QRNG uses quantum measurement outcomes, whereas PRNG uses deterministic mathematical algorithms to generate pseudorandom values.
+
+### Q21. What is the role of QuantumCircuit?
+
+It creates and stores the quantum circuit, including qubits, gates and measurements.
+
+### Q22. What does measure_all() do?
+
+It measures all qubits and stores their results in classical bits.
+
+### Q23. What does get_counts() return?
+
+It returns a dictionary containing the measurement outcomes and their frequencies.
+
+### Q24. Why is the output in binary?
+
+Because quantum measurements in the computational basis produce either 0 or 1 for each qubit.
+
+### Q25. Why do we convert binary into decimal?
+
+To represent the generated binary number in a commonly used numerical format.
+
+### Q26. What does int(random_number, 2) mean?
+
+It converts the binary string into a decimal integer using base 2.
+
+### Q27. Is a qubit the same as a classical bit?
+
+No. A classical bit stores either 0 or 1, whereas a qubit can exist in a superposition of both states.
+
+### Q28. What is the maximum decimal value of a 16-bit number?
+
+65,535.
+
+### Q29. What is the minimum decimal value of a 16-bit number?
+
+0.
+
+### Q30. Is entanglement used in this practical?
+
+No. The qubits are independently placed into superposition using Hadamard gates.
+
+### Q31. What is the difference between superposition and entanglement?
+
+Superposition describes a combination of quantum states, whereas entanglement describes correlations between multiple quantum systems.
+
+### Q32. Can QRNG be used in cryptography?
+
+Yes. It can generate unpredictable cryptographic keys and random values for security applications.
+
+### Q33. What happens if we remove the Hadamard gate?
+
+All qubits remain in their initial |0⟩ state. Measuring them produces an all-zero binary result.
+
+### Q34. What happens if we remove measurement?
+
+The circuit will not produce classical measurement outcomes, so we cannot extract the binary random number using measurement counts.
+
+### Q35. What is the difference between a quantum gate and measurement?
+
+A quantum gate changes the quantum state, whereas measurement extracts a classical result from that state.
+
+### Q36. Can we generate a 32-bit random number using this practical?
+
+Yes. By increasing the number of qubits to 32, we can generate a 32-bit measurement outcome.
+
+### Q37. What is the importance of 2ⁿ in quantum computing?
+
+For n qubits, the computational basis contains 2ⁿ possible states.
+
+For 16 qubits:
+
+2¹⁶ = 65,536 possible basis states.
+
+### Q38. Does a 16-qubit circuit generate all 65,536 numbers in one execution?
+
+No. One measurement produces only one 16-bit outcome. Different executions can produce different outcomes.
+
+### Q39. Are all possible outcomes equally probable in this practical?
+
+Ideally, yes. Since all 16 qubits are independently initialized in equal superposition, each of the 65,536 bitstrings has probability 1/65,536.
+
+### Q40. What is the main limitation of this implementation?
+
+It uses a classical simulator rather than physical quantum hardware. Therefore, it demonstrates the QRNG mechanism but does not provide an actual physical quantum entropy source.
+
+---
+
+# 18. MOST IMPORTANT QUESTIONS TO PREPARE BEFORE THE EXTERNAL
+
+If you have limited preparation time, prioritize these questions:
+
+| No. | Question | Key Answer |
+|---|---|---|
+| 1 | What is QRNG? | Quantum Random Number Generator |
+| 2 | What is a qubit? | Basic unit of quantum information |
+| 3 | What is superposition? | Combination of quantum states |
+| 4 | Which gate is used? | Hadamard gate |
+| 5 | Why is Hadamard used? | To create equal superposition |
+| 6 | What is the probability of 0 and 1? | 50% each |
+| 7 | What is measurement? | Quantum-to-classical conversion |
+| 8 | What are shots? | Number of circuit executions |
+| 9 | Why 16 qubits? | To generate a 16-bit result |
+| 10 | How many possible outcomes? | 65,536 |
+| 11 | What is StatevectorSampler? | Statevector-based measurement simulator |
+| 12 | What is quantum state collapse? | Superposition becomes a definite outcome |
+| 13 | What is get_counts()? | Returns measurement frequencies |
+| 14 | Why binary to decimal? | Numerical representation |
+| 15 | What is the difference between QRNG and PRNG? | Quantum measurement vs mathematical algorithm |
+| 16 | Is entanglement used? | No |
+| 17 | What happens without Hadamard? | All-zero measurement |
+| 18 | Is this actual quantum hardware? | No, it is a simulation |
+| 19 | What is the decimal range? | 0–65,535 |
+| 20 | What are QRNG applications? | Cryptography, security and scientific simulations |
+
+### Final explanation to give the external examiner
+
+If the examiner asks you to explain the complete practical in your own words, you can say:
+
+**"In this practical, we implement a 16-qubit Quantum Random Number Generator using Qiskit. Initially, all 16 qubits are in the zero state. We apply Hadamard gates to each qubit to create an equal superposition of zero and one, giving each outcome a probability of 50%. Then, we measure all the qubits to obtain a 16-bit binary number. We use StatevectorSampler to simulate the measurement process and retrieve the result using measurement counts. Finally, we convert the binary number into its decimal equivalent and display the quantum circuit. This implementation demonstrates the principle of quantum random number generation through simulation."**
